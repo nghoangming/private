@@ -10,7 +10,7 @@ function SeatPicker() {
 }
 
 const facilities = [
-  { name: "Phòng Lab Nghiên cứu AI & IoT", location: "Tòa nhà B", detail: "40 máy cấu hình cao · Thiết bị hiện đại", status: "Đang mở", icon: Cpu, cls: "lab" },
+  { name: "Phòng thực hành Nghiên cứu AI & IoT", location: "Tòa nhà B", detail: "40 máy cấu hình cao · Thiết bị hiện đại", status: "Đang mở", icon: Cpu, cls: "lab" },
   { name: "Hội trường 600 chỗ", location: "Tòa nhà A", detail: "Máy chiếu 4K · Âm thanh vòm", status: "Cần duyệt", icon: UsersRound, cls: "hall" },
   { name: "Khu tự học sáng tạo 24/7", location: "Tòa nhà Thư viện", detail: "Không gian yên tĩnh · Wi-Fi 6", status: "Miễn phí", icon: Wifi, cls: "library" },
 ];

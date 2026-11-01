@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { AdminPortal } from "@/components/admin-portal";
-import "./admin.css";
+import { RoleWorkspace } from "@/components/role-workspace";
 
 export const metadata: Metadata = {
-  title: "Admin Portal | TDTU Smart Campus",
-  description:
-    "Giao diện quản trị minh họa cho phòng học, đặt chỗ, ghế ngồi và sự cố tại TDTU Smart Campus.",
+  title: "Không gian Quản trị | TDTU Smart Campus",
+  description: "Không gian quản trị minh họa cho phòng học, đặt chỗ, người dùng và sự cố tại TDTU Smart Campus.",
 };
 
 export default function AdminPage() {
-  return <AdminPortal />;
+  return <RoleWorkspace role="ADMIN" />;
 }

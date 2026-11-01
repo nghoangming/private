@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
+export default function ForbiddenPage() { return <main className="access-page"><div className="access-card"><span className="access-icon"><LockKeyhole size={30} /></span><span className="auth-kicker">403 / QUYỀN TRUY CẬP</span><h1>Bạn không có quyền truy cập.</h1><p>Vai trò của tài khoản demo hiện tại không có quyền xem không gian này. Hãy quay lại đúng khu vực hoặc đăng nhập tài khoản khác.</p><div><Link href="/" className="auth-submit"><ArrowLeft size={17} /> Về trang chủ</Link><Link href="/login" className="access-link">Đổi tài khoản</Link></div></div></main>; }
