@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,12 +34,12 @@ public class SeatReservationController {
     @PostMapping("/seat-reservations")
     @ResponseStatus(HttpStatus.CREATED)
     public SeatReservationResponse create(@Valid @RequestBody SeatReservationRequest request,
-                                          @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+                                          @RequestAttribute("authenticatedUserId") Long userId) {
         return service.create(request, userId);
     }
 
     @GetMapping("/seat-reservations/mine")
-    public List<SeatReservationResponse> mine(@RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+    public List<SeatReservationResponse> mine(@RequestAttribute("authenticatedUserId") Long userId) {
         return service.forUser(userId);
     }
 

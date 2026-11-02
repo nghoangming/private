@@ -1,36 +1,47 @@
 export type Role = "ADMIN" | "TEACHER" | "STUDENT";
 export type DemoAccount = { id: number; name: string; email: string; role: Role };
+type LoginResponse = { accessToken: string; expiresAt: string; id: number; name: string; email: string; roles: string[] };
+type StoredSession = { account: DemoAccount; accessToken: string; expiresAt: string };
 
-// Demo-only adapter. This is NOT authentication or a security boundary.
-// Replace with backend-issued sessions and server-side RBAC before real deployment.
-const DEMO_PASSWORD = "Campus@2026";
-const accounts: DemoAccount[] = [
-  { id: 1, name: "Nguyễn Minh Anh", email: "admin@tdtu.edu.vn", role: "ADMIN" },
-  { id: 2, name: "Trần Hoàng Nam", email: "teacher@tdtu.edu.vn", role: "TEACHER" },
-  { id: 3, name: "Lê Thu Hà", email: "student@tdtu.edu.vn", role: "STUDENT" },
+const SESSION_KEY = "tdtu-campus-auth-session";
+export const demoAccounts: Array<{ email: string; role: Role; name: string }> = [
+  { email: "admin@smartcampus.test", role: "ADMIN", name: "Campus Administrator" },
+  { email: "teacher@smartcampus.test", role: "TEACHER", name: "Demo Teacher" },
+  { email: "student@smartcampus.test", role: "STUDENT", name: "Demo Student" },
 ];
-const SESSION_KEY = "tdtu-campus-demo-session";
-export const demoAccounts = accounts.map(({ email, role, name }) => ({ email, role, name }));
-export const demoPassword = DEMO_PASSWORD;
+
+function stored(): StoredSession | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as StoredSession;
+    if (!value.accessToken || !value.account?.role || Date.now() >= new Date(value.expiresAt).getTime()) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return value;
+  } catch { return null; }
+}
 
 export const demoAuth = {
   async signIn(email: string, password: string, requestedRole: Role): Promise<DemoAccount> {
-    await new Promise(resolve => setTimeout(resolve, 550));
-    const account = accounts.find(item => item.email.toLowerCase() === email.trim().toLowerCase());
-    if (!account || password !== DEMO_PASSWORD) throw new Error("Email hoặc mật khẩu minh họa không đúng.");
-    if (account.role !== requestedRole) throw new Error(`Tài khoản này có vai trò ${account.role}. Hãy chọn đúng vai trò để tiếp tục.`);
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(account));
+    sessionStorage.removeItem(SESSION_KEY);
+    const response = await fetch("/api/v1/auth/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null) as { message?: string } | null;
+      throw new Error(body?.message ?? "Không thể đăng nhập. Kiểm tra email và mật khẩu.");
+    }
+    const data = await response.json() as LoginResponse;
+    if (!data.roles.includes(requestedRole)) throw new Error("Tài khoản không có vai trò đã chọn.");
+    const account: DemoAccount = { id: data.id, name: data.name, email: data.email, role: requestedRole };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ account, accessToken: data.accessToken, expiresAt: data.expiresAt } satisfies StoredSession));
     return account;
   },
-  current(): DemoAccount | null {
-    try {
-      const value = sessionStorage.getItem(SESSION_KEY);
-      if (!value) return null;
-      const account = JSON.parse(value) as Partial<DemoAccount>;
-      // Resolve the role from the demo account registry, never from the role toggle or stored role.
-      return accounts.find(item => item.id === account.id && item.email === account.email) ?? null;
-    } catch { return null; }
-  },
+  current(): DemoAccount | null { return stored()?.account ?? null; },
+  token(): string | null { return stored()?.accessToken ?? null; },
   signOut() { sessionStorage.removeItem(SESSION_KEY); },
 };
 export const rolePath = (role: Role) => `/${role.toLowerCase()}`;

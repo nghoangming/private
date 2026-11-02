@@ -1,1 +1,3 @@
+com\smartcampus\auth\JwtServiceTest.class
+com\smartcampus\auth\JwtAuthFilterTest.class
 com\smartcampus\SmartCampusBackendApplicationTests.class

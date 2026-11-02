@@ -1,3 +1,6 @@
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\AuthController.java
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\JwtAuthFilter.java
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\JwtService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\controller\ClassroomReservationController.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\controller\ClassSessionController.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\controller\HealthController.java
@@ -37,5 +40,4 @@ D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\R
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\RoomService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\SeatReservationService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\SmartCampusBackendApplication.java
-D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampusmock\MockApiController.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampusmock\MockBackendApplication.java

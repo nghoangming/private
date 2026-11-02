@@ -36,7 +36,7 @@ public class ClassroomReservationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationResponse create(@Valid @RequestBody ReservationRequest request,
-                                      @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+                                      @RequestAttribute("authenticatedUserId") Long userId) {
         return reservationService.create(request, "CLASSROOM", userId);
     }
 

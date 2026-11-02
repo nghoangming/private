@@ -21,27 +21,27 @@ public class QrAttendanceController {
 
     @PostMapping("/class-sessions/{id}/qr")
     public QrResponse generate(@PathVariable Long id,
-            @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+            @RequestAttribute("authenticatedUserId") Long userId) {
         return service.generate(id, userId);
     }
 
     @PostMapping("/attendance/check-in")
     @ResponseStatus(HttpStatus.CREATED)
     public AttendanceResponse checkIn(@Valid @RequestBody CheckInRequest request,
-            @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+            @RequestAttribute("authenticatedUserId") Long userId) {
         return service.checkIn(request, userId);
     }
 
     @GetMapping("/attendance")
     public List<AttendanceResponse> list(@RequestParam Long classSessionId,
-            @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+            @RequestAttribute("authenticatedUserId") Long userId) {
         return service.list(classSessionId, userId);
     }
 
     @DeleteMapping("/attendance/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@PathVariable Long id,
-            @RequestHeader(value = "X-Demo-User-Id", defaultValue = "1") Long userId) {
+            @RequestAttribute("authenticatedUserId") Long userId) {
         service.cancel(id, userId);
     }
 }
