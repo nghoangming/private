@@ -34,16 +34,22 @@ export type ApiSeat = { id: number; roomId: number; seatNumber: number; status: 
 export type ApiSeatReservation = { id: number; classSessionId: number; seatId: number; userId: number; roomId: number; status: string };
 export type ApiQr = { classSessionId: number; token: string; expiresAt: string };
 export type ApiAttendance = { id: number | null; classSessionId: number; userId: number; seatId: number; seatNumber: number; status: "PRESENT" | "NOT_CHECKED_IN"; checkedInAt: string | null };
+export type ApiRoomSchedule = { bookingId: number; startTime: string; endTime: string; status: ApiReservation["status"] };
 export const campusApi = {
   rooms: () => api<ApiRoom[]>("/rooms"),
+  room: (id: number) => api<ApiRoom>(`/rooms/${id}`),
+  roomSchedule: (id: number) => api<ApiRoomSchedule[]>(`/rooms/${id}/schedule`),
   reservations: async () => [...await api<ApiReservation[]>("/classroom-reservations"), ...await api<ApiReservation[]>("/study-room-reservations")],
+  reservation: (kind: "classroom" | "study", id: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}`),
   createReservation: (kind: "classroom" | "study", data: { roomId: number; startTime: string; endTime: string }, _userId: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}`, { method: "POST", body: JSON.stringify(data) }),
   cancelReservation: (kind: "classroom" | "study", id: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}/cancel`, { method: "PATCH" }),
   reviewReservation: (kind: "classroom" | "study", id: number, decision: "approve" | "reject") => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}/${decision}`, { method: "PATCH" }),
   sessions: () => api<ApiClassSession[]>("/class-sessions"),
-  createSession: (bookingId: number, title: string) => api<ApiClassSession>("/class-sessions", { method: "POST", body: JSON.stringify({ bookingId, courseCode: "DEMO", title }) }),
+  session: (id: number) => api<ApiClassSession>(`/class-sessions/${id}`),
+  createSession: (bookingId: number, courseCode: string, title: string) => api<ApiClassSession>("/class-sessions", { method: "POST", body: JSON.stringify({ bookingId, courseCode, title }) }),
   seats: (sessionId: number) => api<ApiSeat[]>(`/class-sessions/${sessionId}/seats`),
   mySeat: async (_userId: number) => (await api<ApiSeatReservation[]>("/seat-reservations/mine"))[0] ?? null,
+  seatReservation: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}`),
   chooseSeat: (_userId: number, classSessionId: number, seatId: number) => api<ApiSeatReservation>("/seat-reservations", { method: "POST", body: JSON.stringify({ classSessionId, seatId }) }),
   cancelSeat: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}/cancel`, { method: "PATCH" }),
   generateQr: (classSessionId: number, _teacherId: number) => api<ApiQr>(`/class-sessions/${classSessionId}/qr`, { method: "POST" }),

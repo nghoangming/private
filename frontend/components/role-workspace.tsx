@@ -40,7 +40,7 @@ export function RoleWorkspace({ role }: { role: Role }) {
     const sessions = apiSessions.map(session => ({ id: session.id, bookingId: session.bookingId, subject: session.title, className: session.courseCode, roomId: session.roomId, roomCode: rooms.find(room => room.id === session.roomId)?.code ?? "", startTime: session.startTime, endTime: session.endTime, status: "Sắp diễn ra" as const, teacherId: reservations.find(booking => booking.id === session.bookingId)?.userId ?? 2 }));
     const seats: WorkspaceData["seats"] = [];
     return { rooms, reservations, seats, incidents, sessions, users, equipment };
-  }, { revalidateOnMount: true, revalidateOnFocus: true });
+  }, { revalidateOnMount: true, revalidateOnFocus: true, refreshInterval: 30000 });
   useEffect(() => { const current = demoAuth.current(); setAccount(current); setChecked(true); if (!current) router.replace(role === "ADMIN" ? "/admin/login" : "/login"); else if (current.role !== role) router.replace("/forbidden"); }, [role, router]);
   useEffect(() => { setEdits({}); }, [role, account?.id]);
   useEffect(() => { if (source) setEdits({}); }, [source]);
