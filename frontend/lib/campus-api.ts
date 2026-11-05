@@ -59,6 +59,7 @@ export const campusApi = {
   generateQr: (classSessionId: number, _teacherId: number) => api<ApiQr>(`/class-sessions/${classSessionId}/qr`, { method: "POST" }),
   checkIn: (qrCode: string, classSessionId: number, _studentId: number) => api<ApiAttendance>("/attendance/check-in", { method: "POST", body: JSON.stringify({ qrCode, classSessionId }) }),
   attendance: (classSessionId: number, _teacherId: number) => api<ApiAttendance[]>(`/attendance?classSessionId=${classSessionId}`),
+  myAttendance: () => api<number[]>("/attendance/mine"),
   cancelAttendance: async (id: number, _teacherId: number) => {
     const token = demoAuth.token();
     if (!token) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");

@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,8 +62,15 @@ public class QrAttendanceService {
         if (!session.teacherId().equals(teacherId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your class session");
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         open(session, now);
-        byte[] bytes = new byte[32]; random.nextBytes(bytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        String token;
+        do {
+            StringBuilder code = new StringBuilder(5);
+            String alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            for (int i = 0; i < 5; i++) code.append(alphabet.charAt(random.nextInt(alphabet.length())));
+            token = code.toString();
+        } while (Integer.valueOf(1).equals(jdbc.queryForObject(
+                "SELECT count(*) FROM class_session_qr_tokens WHERE token_hash = ? AND expires_at > CURRENT_TIMESTAMP",
+                Integer.class, hash(token))));
         OffsetDateTime expiresAt = now.plusMinutes(2).isBefore(windowEnd(session)) ? now.plusMinutes(2) : windowEnd(session);
         jdbc.update("DELETE FROM class_session_qr_tokens WHERE class_session_id = ?", sessionId);
         jdbc.update("INSERT INTO class_session_qr_tokens(class_session_id, token_hash, expires_at, created_by) VALUES (?, ?, ?, ?)",
@@ -133,6 +139,16 @@ public class QrAttendanceService {
             """, (rs, n) -> new AttendanceResponse(rs.getObject(1, Long.class), sessionId, rs.getLong(2), rs.getLong(3),
                 rs.getInt(4), rs.getString(5) == null ? "NOT_CHECKED_IN" : rs.getString(5),
                 rs.getObject(6, OffsetDateTime.class)), session.bookingId(), sessionId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> checkedInSessions(Long studentId) {
+        role(studentId, "STUDENT");
+        return jdbc.query("""
+            SELECT DISTINCT cs.class_session_id FROM attendance a
+            JOIN class_sessions cs ON cs.booking_id = a.booking_id
+            WHERE a.user_id = ? AND a.attendance_status = 'PRESENT'
+            """, (rs, n) -> rs.getLong(1), studentId);
     }
 
     private String hash(String value) {

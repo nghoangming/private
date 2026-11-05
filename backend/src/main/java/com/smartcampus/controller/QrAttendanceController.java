@@ -38,6 +38,12 @@ public class QrAttendanceController {
         return service.list(classSessionId, userId);
     }
 
+    @GetMapping("/attendance/mine")
+    public List<Long> checkedInSessions(
+            @RequestAttribute("authenticatedUserId") Long userId) {
+        return service.checkedInSessions(userId);
+    }
+
     @DeleteMapping("/attendance/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@PathVariable Long id,
