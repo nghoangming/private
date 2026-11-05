@@ -10,6 +10,8 @@ import com.smartcampus.repository.BookingRepository;
 import com.smartcampus.repository.ClassSessionRepository;
 import com.smartcampus.repository.RoomRepository;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +67,21 @@ public class ClassSessionService {
                         .map(booking -> "PENDING".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus()))
                         .orElse(false))
                 .map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassSessionResponse> listByDate(LocalDate date) {
+        return listBetween(date, date);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassSessionResponse> listBetween(LocalDate from, LocalDate to) {
+        if (to.isBefore(from) || to.isAfter(from.plusDays(31))) {
+            throw new IllegalArgumentException("Date range must be between 1 and 32 days");
+        }
+        var start = from.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime();
+        var end = to.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime();
+        return classSessionRepository.findActiveOnDate(start, end).stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)

@@ -1,6 +1,7 @@
 import { demoAuth } from "@/lib/demo-auth";
 
-export type ApiRoom = { id: number; code: string; name: string; location: string; status: string; type: "THEORY" | "LAB" | "STUDY" };
+export type ApiRoom = { id: number; code: string; name: string; location: string; status: "ACTIVE" | "MAINTENANCE"; type: "THEORY" | "LAB" | "STUDY"; capacity: number };
+export type ApiRoomWrite = Omit<ApiRoom, "id">;
 
 export async function availableRooms(date: string, startTime: string, endTime: string): Promise<ApiRoom[]> {
   const params = new URLSearchParams({ date, startTime, endTime });
@@ -29,7 +30,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export type ApiReservation = { id: number; userId: number; roomId: number; startTime: string; endTime: string; status: "PENDING" | "CONFIRMED" | "CANCELLED" | "REJECTED"; createdAt: string };
-export type ApiClassSession = { id: number; bookingId: number; courseCode: string; title: string; roomId: number; startTime: string; endTime: string };
+export type ApiClassSession = { id: number; bookingId: number; courseCode: string; title: string; roomId: number; startTime: string; endTime: string; calendarStatus?: "SCHEDULED" | "ABSENT" | "MAKEUP" };
 export type ApiSeat = { id: number; roomId: number; seatNumber: number; status: "AVAILABLE" | "RESERVED" | "DISABLED" | "OCCUPIED" | "MAINTENANCE" };
 export type ApiSeatReservation = { id: number; classSessionId: number; seatId: number; userId: number; roomId: number; status: string };
 export type ApiQr = { classSessionId: number; token: string; expiresAt: string };
@@ -38,17 +39,20 @@ export type ApiRoomSchedule = { bookingId: number; startTime: string; endTime: s
 export const campusApi = {
   rooms: () => api<ApiRoom[]>("/rooms"),
   room: (id: number) => api<ApiRoom>(`/rooms/${id}`),
-  roomSchedule: (id: number) => api<ApiRoomSchedule[]>(`/rooms/${id}/schedule`),
+  createRoom: (data: ApiRoomWrite) => api<ApiRoom>("/rooms", { method: "POST", body: JSON.stringify(data) }),
+  updateRoom: (id: number, data: ApiRoomWrite) => api<ApiRoom>(`/rooms/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  roomSchedule: (id: number, date: string) => api<ApiRoomSchedule[]>(`/rooms/${id}/schedule?date=${encodeURIComponent(date)}`),
   reservations: async () => [...await api<ApiReservation[]>("/classroom-reservations"), ...await api<ApiReservation[]>("/study-room-reservations")],
   reservation: (kind: "classroom" | "study", id: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}`),
   createReservation: (kind: "classroom" | "study", data: { roomId: number; startTime: string; endTime: string }, _userId: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}`, { method: "POST", body: JSON.stringify(data) }),
   cancelReservation: (kind: "classroom" | "study", id: number) => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}/cancel`, { method: "PATCH" }),
   reviewReservation: (kind: "classroom" | "study", id: number, decision: "approve" | "reject") => api<ApiReservation>(`/${kind === "study" ? "study-room-reservations" : "classroom-reservations"}/${id}/${decision}`, { method: "PATCH" }),
-  sessions: () => api<ApiClassSession[]>("/class-sessions"),
+  sessions: (date?: string) => api<ApiClassSession[]>(`/class-sessions${date ? `?date=${encodeURIComponent(date)}` : ""}`),
+  sessionsBetween: (from: string, to: string) => api<ApiClassSession[]>(`/class-sessions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
   session: (id: number) => api<ApiClassSession>(`/class-sessions/${id}`),
   createSession: (bookingId: number, courseCode: string, title: string) => api<ApiClassSession>("/class-sessions", { method: "POST", body: JSON.stringify({ bookingId, courseCode, title }) }),
   seats: (sessionId: number) => api<ApiSeat[]>(`/class-sessions/${sessionId}/seats`),
-  mySeat: async (_userId: number) => (await api<ApiSeatReservation[]>("/seat-reservations/mine"))[0] ?? null,
+  mySeats: (_userId: number) => api<ApiSeatReservation[]>("/seat-reservations/mine"),
   seatReservation: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}`),
   chooseSeat: (_userId: number, classSessionId: number, seatId: number) => api<ApiSeatReservation>("/seat-reservations", { method: "POST", body: JSON.stringify({ classSessionId, seatId }) }),
   cancelSeat: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}/cancel`, { method: "PATCH" }),

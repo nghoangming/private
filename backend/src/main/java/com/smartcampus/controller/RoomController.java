@@ -2,7 +2,10 @@ package com.smartcampus.controller;
 
 import com.smartcampus.dto.RoomResponse;
 import com.smartcampus.dto.RoomScheduleResponse;
+import com.smartcampus.dto.RoomWriteRequest;
 import com.smartcampus.service.RoomService;
+import com.smartcampus.service.RoomWriteService;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +17,24 @@ import java.util.List;
 public class RoomController {
 
     private final RoomService roomService;
+    private final RoomWriteService roomWriteService;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, RoomWriteService roomWriteService) {
         this.roomService = roomService;
+        this.roomWriteService = roomWriteService;
+    }
+
+    @PostMapping
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED)
+    public RoomResponse create(@Valid @RequestBody RoomWriteRequest request,
+                               @RequestAttribute("authenticatedUserId") Long userId) {
+        return roomWriteService.create(request, userId);
+    }
+
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
+    public RoomResponse update(@PathVariable Long id, @Valid @RequestBody RoomWriteRequest request,
+                               @RequestAttribute("authenticatedUserId") Long userId) {
+        return roomWriteService.update(id, request, userId);
     }
 
     @GetMapping

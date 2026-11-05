@@ -12,6 +12,23 @@
 .site-header .mobile-nav{background:var(--navy)}
 .site-header .mobile-nav a{color:var(--campus-on-dark)}
 .site-header .mobile-nav a:hover{color:var(--campus-accent-light)}
+
+/* Match the shared portal header scale on the landing page. */
+.site-header{height:84px}
+.site-header .header-inner.container{width:min(calc(100% - 48px),1360px)}
+.site-header .brand{gap:13px}
+.site-header .brand-icon{width:46px;height:46px;border-radius:11px}
+.site-header .brand-icon svg{width:25px;height:25px}
+.site-header .brand-name{font-size:18px;letter-spacing:-.35px}
+.site-header .brand-name small{font-size:10px;letter-spacing:1.2px;margin-top:5px}
+.site-header .desktop-nav{gap:20px}
+.site-header .desktop-nav a{font-size:14px}
+.site-header .header-actions{gap:12px}
+.site-header .admin-demo-link,.site-header .portal-button{font-size:14px;padding:12px 15px}
+.site-header .portal-button{min-height:44px;border-radius:8px}
+@media(max-width:1180px){.site-header .desktop-nav,.site-header .header-actions{display:none}.site-header .menu-button{display:grid;place-items:center;background:none;border:0;color:var(--campus-on-dark)}.site-header .mobile-nav{display:flex;flex-direction:column;padding:16px 24px 22px;background:var(--navy);box-shadow:0 12px 22px #071d31a3}.site-header .mobile-nav a{padding:13px 0;font-size:15px;font-weight:700}}
+@media(max-width:750px){.site-header{height:74px}.site-header .brand-icon{width:42px;height:42px}.site-header .brand-name{font-size:16px}.site-header .brand-name small{font-size:9px}}
+@media(max-width:420px){.site-header .header-inner.container{width:calc(100% - 32px)}.site-header .brand{gap:9px}.site-header .brand-icon{width:39px;height:39px}.site-header .brand-name{font-size:15px}.site-header .brand-name small{font-size:8px}}
 .finder-shell{background:var(--campus-paper);border-color:var(--campus-line);box-shadow:0 20px 55px #09213333}
 .finder-field{background:#fff;border-color:var(--campus-line)}
 .field-label{color:var(--muted)}
@@ -41,3 +58,4 @@
 .footer-bottom{border-color:#ffffff26}
 .footer-bottom>span:last-child{color:#afe5ce}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+.features-section,.facilities-section{background:radial-gradient(circle at 8% 18%,#c8dfe5 0,transparent 36%),radial-gradient(circle at 95% 65%,#d3deec 0,transparent 34%),#d9e7eb}

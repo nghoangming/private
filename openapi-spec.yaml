@@ -1,0 +1,372 @@
+openapi: 3.1.0
+info:
+  title: Smart Campus Room Reservation API
+  version: 1.0.0
+  description: API contract for Smart Campus. Authentication, room reads and writes, bookings, class sessions, seats and QR attendance are implemented; other operations remain planned contracts.
+servers:
+  - url: http://localhost:8080/api/v1
+security:
+  - bearerAuth: []
+tags:
+  - { name: Health }
+  - { name: Authentication }
+  - { name: Rooms }
+  - { name: Class sessions }
+  - { name: Reservations }
+  - { name: Seats }
+  - { name: Attendance }
+  - { name: Incidents }
+  - { name: Resources }
+  - { name: Notifications }
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      summary: Check backend health
+      responses:
+        '200': { description: Backend is running, content: { text/plain: { schema: { type: string } } } }
+  /auth/login:
+    post:
+      tags: [Authentication]
+      security: []
+      summary: Sign in
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } } }
+      responses:
+        '200': { description: Authenticated, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Sign out
+      responses: { '204': { description: Signed out }, '401': { $ref: '#/components/responses/Unauthorized' } }
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      responses:
+        '200': { description: Current account, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      security: []
+      summary: Refresh access token
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RefreshTokenRequest' } } } }
+      responses: { '200': { description: New token, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }, '401': { $ref: '#/components/responses/Unauthorized' } }
+  /auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ChangePasswordRequest' } } } }
+      responses: { '204': { description: Password changed }, '400': { $ref: '#/components/responses/BadRequest' } }
+  /rooms:
+    get:
+      tags: [Rooms]
+      security: []
+      summary: List rooms
+      parameters: [{ $ref: '#/components/parameters/RoomType' }, { $ref: '#/components/parameters/RoomStatus' }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Rooms, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Room' } } } } } }
+    post:
+      tags: [Rooms]
+      summary: Create room (Admin)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RoomRequest' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Room' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /rooms/{id}:
+    parameters: [{ $ref: '#/components/parameters/RoomId' }]
+    get:
+      tags: [Rooms]
+      security: []
+      summary: Get room detail
+      responses: { '200': { description: Room, content: { application/json: { schema: { $ref: '#/components/schemas/Room' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    put:
+      tags: [Rooms]
+      summary: Update room (Admin)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/RoomRequest' } } } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Room' } } } }, '403': { $ref: '#/components/responses/Forbidden' }, '404': { $ref: '#/components/responses/NotFound' } }
+    delete:
+      tags: [Rooms]
+      summary: Delete room (Admin)
+      responses: { '204': { description: Deleted }, '403': { $ref: '#/components/responses/Forbidden' }, '404': { $ref: '#/components/responses/NotFound' } }
+  /rooms/{id}/schedule:
+    get:
+      tags: [Rooms]
+      security: []
+      summary: Get room schedule
+      parameters: [{ $ref: '#/components/parameters/RoomId' }, { $ref: '#/components/parameters/Date' }, { $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }]
+      responses: { '200': { description: Schedule, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ScheduleEntry' } } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' } }
+  /rooms/availability:
+    get:
+      tags: [Rooms]
+      security: []
+      summary: List all rooms available in an interval
+      description: Uses existing.startTime < requested.endTime AND existing.endTime > requested.startTime; cancelled bookings are ignored.
+      parameters: [{ $ref: '#/components/parameters/Date' }, { $ref: '#/components/parameters/StartTime' }, { $ref: '#/components/parameters/EndTime' }]
+      responses: { '200': { description: Available rooms, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Room' } } } } }, '400': { $ref: '#/components/responses/BadRequest' } }
+  /class-sessions:
+    get:
+      tags: [Class sessions]
+      summary: List class sessions
+      responses: { '200': { description: Class sessions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassSession' } } } } } }
+    post:
+      tags: [Class sessions]
+      summary: Create class session
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ClassSessionRequest' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/ClassSession' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } }
+  /class-sessions/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Class sessions]
+      summary: Get class session
+      responses: { '200': { description: Class session, content: { application/json: { schema: { $ref: '#/components/schemas/ClassSession' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /classroom-reservations:
+    get:
+      tags: [Reservations]
+      summary: List classroom reservations
+      parameters: [{ $ref: '#/components/parameters/Status' }, { $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Reservations, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Reservation' } } } } } }
+    post:
+      tags: [Reservations]
+      summary: Create classroom reservation
+      description: Must validate input, room existence and overlap inside one transaction. Concurrent conflicts return 409.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReservationRequest' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } }
+  /classroom-reservations/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Reservations]
+      summary: Get classroom reservation
+      responses: { '200': { description: Reservation, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /classroom-reservations/{id}/cancel:
+    patch:
+      tags: [Reservations]
+      summary: Cancel classroom reservation
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Cancelled, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /classroom-reservations/{id}/approve:
+    patch:
+      tags: [Reservations]
+      summary: Approve classroom reservation (Admin)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Approved, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /classroom-reservations/{id}/reject:
+    patch:
+      tags: [Reservations]
+      summary: Reject classroom reservation (Admin)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Rejected, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /study-room-reservations:
+    get:
+      tags: [Reservations]
+      summary: List study room reservations
+      parameters: [{ $ref: '#/components/parameters/Status' }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Reservations, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Reservation' } } } } } }
+    post:
+      tags: [Reservations]
+      summary: Create study room reservation
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReservationRequest' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } }
+  /study-room-reservations/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Reservations]
+      summary: Get study room reservation
+      responses: { '200': { description: Reservation, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /study-room-reservations/{id}/cancel:
+    patch:
+      tags: [Reservations]
+      summary: Cancel study room reservation
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Cancelled, content: { application/json: { schema: { $ref: '#/components/schemas/Reservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /class-sessions/{id}/seats:
+    get:
+      tags: [Seats]
+      summary: List seats for a class session
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Seats, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Seat' } } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /seat-reservations:
+    post:
+      tags: [Seats]
+      summary: Reserve a seat
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SeatReservationRequest' } } } }
+      responses: { '201': { description: Reserved, content: { application/json: { schema: { $ref: '#/components/schemas/SeatReservation' } } } }, '409': { $ref: '#/components/responses/Conflict' } }
+  /seat-reservations/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Seats]
+      summary: Get seat reservation
+      responses: { '200': { description: Seat reservation, content: { application/json: { schema: { $ref: '#/components/schemas/SeatReservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /seat-reservations/{id}/cancel:
+    patch:
+      tags: [Seats]
+      summary: Cancel seat reservation
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Cancelled, content: { application/json: { schema: { $ref: '#/components/schemas/SeatReservation' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /attendance/check-in:
+    post:
+      tags: [Attendance]
+      summary: Check in with QR
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/CheckInRequest' } } } }
+      responses: { '201': { description: Recorded, content: { application/json: { schema: { $ref: '#/components/schemas/Attendance' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } }
+  /class-sessions/{id}/qr:
+    post:
+      tags: [Attendance]
+      summary: Generate a short-lived QR token for the teacher's approved class session
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: QR token, content: { application/json: { schema: { $ref: '#/components/schemas/ClassSessionQr' } } } }, '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' } }
+  /attendance:
+    get:
+      tags: [Attendance]
+      summary: List class attendance
+      parameters: [{ name: classSessionId, in: query, schema: { type: integer, format: int64 } }, { $ref: '#/components/parameters/Status' }]
+      responses: { '200': { description: Attendance, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Attendance' } } } } } }
+  /attendance/{id}:
+    get:
+      tags: [Attendance]
+      summary: Get attendance record
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Attendance, content: { application/json: { schema: { $ref: '#/components/schemas/Attendance' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    delete:
+      tags: [Attendance]
+      summary: Teacher cancels one check-in while retaining its audit record
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '204': { description: Check-in cancelled }, '404': { $ref: '#/components/responses/NotFound' } }
+  /incidents:
+    get:
+      tags: [Incidents]
+      summary: List incidents
+      parameters: [{ $ref: '#/components/parameters/Status' }, { name: roomId, in: query, schema: { type: integer, format: int64 } }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Incidents, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Incident' } } } } } }
+    post:
+      tags: [Incidents]
+      summary: Report incident
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/IncidentRequest' } } } }
+      responses: { '201': { description: Reported, content: { application/json: { schema: { $ref: '#/components/schemas/Incident' } } } }, '400': { $ref: '#/components/responses/BadRequest' } }
+  /incidents/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Incidents]
+      summary: Get incident
+      responses: { '200': { description: Incident, content: { application/json: { schema: { $ref: '#/components/schemas/Incident' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    patch:
+      tags: [Incidents]
+      summary: Update incident
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/IncidentUpdateRequest' } } } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Incident' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /resources:
+    get:
+      tags: [Resources]
+      summary: List resources
+      parameters: [{ name: roomId, in: query, schema: { type: integer, format: int64 } }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Resources, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Resource' } } } } } }
+    post:
+      tags: [Resources]
+      summary: Create resource (Admin)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ResourceRequest' } } } }
+      responses: { '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Resource' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /resources/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Resources]
+      summary: Get resource
+      responses: { '200': { description: Resource, content: { application/json: { schema: { $ref: '#/components/schemas/Resource' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+    put:
+      tags: [Resources]
+      summary: Update resource (Admin)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ResourceRequest' } } } }
+      responses: { '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Resource' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+    delete:
+      tags: [Resources]
+      summary: Delete resource (Admin)
+      responses: { '204': { description: Deleted }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List current user notifications
+      parameters: [{ name: isRead, in: query, schema: { type: boolean } }, { $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Notifications, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Notification' } } } } } }
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark notification as read
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: Updated notification, content: { application/json: { schema: { $ref: '#/components/schemas/Notification' } } } }, '404': { $ref: '#/components/responses/NotFound' } }
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses: { '204': { description: Updated } }
+  /users:
+    get:
+      tags: [Authentication]
+      summary: List users (Admin)
+      parameters: [{ $ref: '#/components/parameters/Page' }, { $ref: '#/components/parameters/Size' }]
+      responses: { '200': { description: Users, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/User' } } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+  /users/{id}:
+    get:
+      tags: [Authentication]
+      summary: Get user (Admin)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses: { '200': { description: User, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+    patch:
+      tags: [Authentication]
+      summary: Update user roles/status (Admin)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/UserUpdateRequest' } } } }
+      responses: { '200': { description: Updated user, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }, '403': { $ref: '#/components/responses/Forbidden' } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    RoomId: { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+    Date: { name: date, in: query, required: true, schema: { type: string, format: date } }
+    From: { name: from, in: query, schema: { type: string, format: date-time } }
+    To: { name: to, in: query, schema: { type: string, format: date-time } }
+    StartTime: { name: startTime, in: query, required: true, schema: { type: string, format: time } }
+    EndTime: { name: endTime, in: query, required: true, schema: { type: string, format: time } }
+    RoomType: { name: type, in: query, schema: { type: string, enum: [THEORY, PRACTICE, STUDY] } }
+    RoomStatus: { name: status, in: query, schema: { type: string, enum: [AVAILABLE, INACTIVE, MAINTENANCE, CLOSED] } }
+    Status: { name: status, in: query, schema: { type: string } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+    Size: { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+  responses:
+    BadRequest: { description: Invalid request, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Unauthorized: { description: Authentication required, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Forbidden: { description: Insufficient permission, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    NotFound: { description: Resource not found, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Conflict: { description: Reservation or resource conflict, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [status, message]
+      properties: { status: { type: integer, example: 409 }, message: { type: string } }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties: { email: { type: string, format: email }, password: { type: string, format: password } }
+    RefreshTokenRequest: { type: object, required: [refreshToken], properties: { refreshToken: { type: string } } }
+    ChangePasswordRequest: { type: object, required: [currentPassword, newPassword], properties: { currentPassword: { type: string, format: password }, newPassword: { type: string, format: password, minLength: 8 } } }
+    AuthResponse: { type: object, required: [accessToken, expiresAt, id, name, email, roles], properties: { accessToken: { type: string }, expiresAt: { type: string, format: date-time }, id: { type: integer, format: int64 }, name: { type: string }, email: { type: string, format: email }, roles: { type: array, items: { type: string } } } }
+    User: { type: object, properties: { id: { type: integer, format: int64 }, userCode: { type: string }, fullName: { type: string }, email: { type: string, format: email }, roles: { type: array, items: { type: string } }, status: { type: string, enum: [ACTIVE, INACTIVE] } } }
+    UserUpdateRequest: { type: object, properties: { roles: { type: array, items: { type: string } }, status: { type: string, enum: [ACTIVE, INACTIVE] } } }
+    Room: { type: object, required: [id, code, name, status], properties: { id: { type: integer, format: int64 }, code: { type: string }, name: { type: string }, location: { type: string }, type: { type: string, enum: [THEORY, PRACTICE, STUDY] }, status: { type: string, enum: [AVAILABLE, INACTIVE, MAINTENANCE, CLOSED] } } }
+    RoomRequest: { type: object, required: [code, name, status], properties: { code: { type: string }, name: { type: string }, location: { type: string }, type: { type: string }, status: { type: string } } }
+    ScheduleEntry: { type: object, properties: { bookingId: { type: integer, format: int64 }, startTime: { type: string, format: date-time }, endTime: { type: string, format: date-time }, status: { type: string } } }
+    ClassSession: { type: object, properties: { id: { type: integer, format: int64 }, bookingId: { type: integer, format: int64 }, courseCode: { type: string }, title: { type: string }, roomId: { type: integer, format: int64 }, startTime: { type: string, format: date-time }, endTime: { type: string, format: date-time } } }
+    ClassSessionRequest: { type: object, required: [bookingId, courseCode, title], properties: { bookingId: { type: integer, format: int64 }, courseCode: { type: string }, title: { type: string } } }
+    ReservationRequest: { type: object, required: [roomId, startTime, endTime], properties: { roomId: { type: integer, format: int64 }, classSessionId: { type: integer, format: int64 }, startTime: { type: string, format: date-time }, endTime: { type: string, format: date-time }, note: { type: string } } }
+    Reservation: { allOf: [{ $ref: '#/components/schemas/ReservationRequest' }, { type: object, properties: { id: { type: integer, format: int64 }, userId: { type: integer, format: int64 }, status: { type: string, enum: [PENDING, CONFIRMED, CANCELLED, REJECTED] }, createdAt: { type: string, format: date-time } } }] }
+    Seat: { type: object, properties: { id: { type: integer, format: int64 }, roomId: { type: integer, format: int64 }, seatNumber: { type: integer }, status: { type: string, enum: [AVAILABLE, RESERVED, DISABLED] } } }
+    SeatReservationRequest: { type: object, required: [classSessionId, seatId], properties: { classSessionId: { type: integer, format: int64 }, seatId: { type: integer, format: int64 } } }
+    SeatReservation: { allOf: [{ $ref: '#/components/schemas/SeatReservationRequest' }, { type: object, properties: { id: { type: integer, format: int64 }, userId: { type: integer, format: int64 }, status: { type: string, enum: [CONFIRMED, CANCELLED] } } }] }
+    ClassSessionQr: { type: object, required: [classSessionId, token, expiresAt], properties: { classSessionId: { type: integer, format: int64 }, token: { type: string }, expiresAt: { type: string, format: date-time } } }
+    CheckInRequest: { type: object, required: [qrCode, classSessionId], properties: { qrCode: { type: string }, classSessionId: { type: integer, format: int64 } } }
+    Attendance: { type: object, properties: { id: { type: integer, format: int64, nullable: true }, classSessionId: { type: integer, format: int64 }, userId: { type: integer, format: int64 }, seatId: { type: integer, format: int64 }, seatNumber: { type: integer }, status: { type: string, enum: [PRESENT, NOT_CHECKED_IN] }, checkedInAt: { type: string, format: date-time, nullable: true } } }
+    IncidentRequest: { type: object, required: [roomId, incidentType, description], properties: { roomId: { type: integer, format: int64 }, resourceId: { type: integer, format: int64 }, incidentType: { type: string }, description: { type: string } } }
+    IncidentUpdateRequest: { type: object, properties: { status: { type: string, enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED] }, description: { type: string } } }
+    Incident: { allOf: [{ $ref: '#/components/schemas/IncidentRequest' }, { type: object, properties: { id: { type: integer, format: int64 }, reportedBy: { type: integer, format: int64 }, status: { type: string }, occurredAt: { type: string, format: date-time }, resolvedAt: { type: string, format: date-time } } }] }
+    ResourceRequest: { type: object, required: [roomId, resourceName], properties: { roomId: { type: integer, format: int64 }, resourceName: { type: string }, resourceType: { type: string }, quantity: { type: integer, minimum: 0 }, status: { type: string } } }
+    Resource: { allOf: [{ $ref: '#/components/schemas/ResourceRequest' }, { type: object, properties: { id: { type: integer, format: int64 } } }] }
+    Notification: { type: object, properties: { id: { type: integer, format: int64 }, title: { type: string }, message: { type: string }, isRead: { type: boolean }, createdAt: { type: string, format: date-time } } }

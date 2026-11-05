@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 Test set: com.smartcampus.SmartCampusBackendApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.947 s <<< FAILURE! -- in com.smartcampus.SmartCampusBackendApplicationTests
-com.smartcampus.SmartCampusBackendApplicationTests.contextLoads -- Time elapsed: 0.003 s <<< ERROR!
-java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@2396408a testClass = com.smartcampus.SmartCampusBackendApplicationTests, locations = [], classes = [com.smartcampus.SmartCampusBackendApplication], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@19bedeb8, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@4cc7d00d, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7066363, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.webmvc.test.autoconfigure.WebDriverContextCustomizer@3f6f3cc, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizer@47272cd3, org.springframework.boot.test.context.SpringBootTestAnnotation@e5cc4af4], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.770 s <<< FAILURE! -- in com.smartcampus.SmartCampusBackendApplicationTests
+com.smartcampus.SmartCampusBackendApplicationTests.contextLoads -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@24347d8b testClass = com.smartcampus.SmartCampusBackendApplicationTests, locations = [], classes = [com.smartcampus.SmartCampusBackendApplication], contextInitializerClasses = [], activeProfiles = [], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [org.springframework.boot.test.context.PropertyMappingContextCustomizer@0, org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@184afb78, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@9be7319, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@18c7f6b5, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.webmvc.test.autoconfigure.WebDriverContextCustomizer@586843bc, org.springframework.boot.web.server.context.SpringBootTestRandomPortContextCustomizer@5599b5bb, org.springframework.boot.test.context.SpringBootTestAnnotation@b76e605a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.lambda$loadContext$0(DefaultCacheAwareContextLoaderDelegate.java:195)
 	at org.springframework.test.context.cache.DefaultContextCache.put(DefaultContextCache.java:214)
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:160)
@@ -12,20 +12,20 @@ java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMerge
 	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:242)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(Unknown Source)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(Unknown Source)
-	at java.base/java.util.stream.ReferencePipeline$2$1.accept(Unknown Source)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(Unknown Source)
-	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(Unknown Source)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(Unknown Source)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)
-	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(Unknown Source)
-	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(Unknown Source)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(Unknown Source)
-	at java.base/java.util.stream.ReferencePipeline.forEach(Unknown Source)
-	at java.base/java.util.Optional.orElseGet(Unknown Source)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
-	at java.base/java.util.ArrayList.forEach(Unknown Source)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:186)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1716)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:153)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:176)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:265)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:632)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
 Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/hibernate/autoconfigure/HibernateJpaConfiguration.class]: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1815)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:603)

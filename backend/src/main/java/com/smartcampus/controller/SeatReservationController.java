@@ -1,5 +1,6 @@
 package com.smartcampus.controller;
 
+import com.smartcampus.auth.AccessService;
 import com.smartcampus.dto.SeatReservationRequest;
 import com.smartcampus.dto.SeatReservationResponse;
 import com.smartcampus.dto.SeatResponse;
@@ -21,9 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class SeatReservationController {
     private final SeatReservationService service;
+    private final AccessService access;
 
-    public SeatReservationController(SeatReservationService service) {
+    public SeatReservationController(SeatReservationService service, AccessService access) {
         this.service = service;
+        this.access = access;
     }
 
     @GetMapping("/class-sessions/{classSessionId}/seats")
@@ -35,6 +38,7 @@ public class SeatReservationController {
     @ResponseStatus(HttpStatus.CREATED)
     public SeatReservationResponse create(@Valid @RequestBody SeatReservationRequest request,
                                           @RequestAttribute("authenticatedUserId") Long userId) {
+        access.requireRole(userId, "STUDENT");
         return service.create(request, userId);
     }
 
@@ -44,12 +48,16 @@ public class SeatReservationController {
     }
 
     @GetMapping("/seat-reservations/{id}")
-    public SeatReservationResponse getById(@PathVariable Long id) {
-        return service.getById(id);
+    public SeatReservationResponse getById(@PathVariable Long id,
+                                           @RequestAttribute("authenticatedUserId") Long userId) {
+        SeatReservationResponse reservation = service.getById(id);
+        access.requireOwnerOrAdmin(userId, reservation.userId());
+        return reservation;
     }
 
     @PatchMapping("/seat-reservations/{id}/cancel")
-    public SeatReservationResponse cancel(@PathVariable Long id) {
-        return service.cancel(id);
+    public SeatReservationResponse cancel(@PathVariable Long id,
+                                          @RequestAttribute("authenticatedUserId") Long userId) {
+        return service.cancel(id, userId);
     }
 }

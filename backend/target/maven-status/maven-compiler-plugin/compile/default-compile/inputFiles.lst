@@ -1,3 +1,4 @@
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\AccessService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\AuthController.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\JwtAuthFilter.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\auth\JwtService.java
@@ -14,6 +15,7 @@ D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\Reser
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\ReservationResponse.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\RoomResponse.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\RoomScheduleResponse.java
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\RoomWriteRequest.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\SeatReservationRequest.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\SeatReservationResponse.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\dto\SeatResponse.java
@@ -38,6 +40,7 @@ D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\Q
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\ReservationService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\RoomCategory.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\RoomService.java
+D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\RoomWriteService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\service\SeatReservationService.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampus\SmartCampusBackendApplication.java
 D:\nghoangming\TDTU\CNPM\private\backend\src\main\java\com\smartcampusmock\MockBackendApplication.java

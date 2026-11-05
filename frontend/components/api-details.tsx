@@ -1,19 +1,20 @@
 "use client";
 
 import useSWR from "swr";
+import { useState } from "react";
 import { campusApi } from "@/lib/campus-api";
 import { bookingName, viDate, viTime } from "@/lib/workspace-types";
 
 export function RoomApiDetails({ id }: { id: number }) {
+  const [date, setDate] = useState(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
   const { data: room, error: roomError } = useSWR(`room-detail-${id}`, () => campusApi.room(id));
-  const { data: schedule, error: scheduleError, mutate } = useSWR(`room-schedule-${id}`, () => campusApi.roomSchedule(id));
-  return <section className="ws-panel" style={{ padding: 18, marginTop: 16 }}>
-    <h3>Thông tin và lịch phòng từ API</h3>
-    {(roomError || scheduleError) && <p role="alert">Không tải được dữ liệu phòng. <button className="ws-row-action" onClick={() => void mutate()}>Thử lại</button></p>}
-    {room && <p>{room.code} · {room.name} · {room.location} · {room.type} · {room.status}</p>}
-    {!schedule && !scheduleError && <p>Đang tải lịch phòng...</p>}
-    {schedule?.length === 0 && <p>Phòng chưa có lịch đặt.</p>}
-    {schedule && schedule.length > 0 && <div className="ws-table-wrap"><table className="ws-table"><thead><tr><th>YÊU CẦU</th><th>NGÀY</th><th>GIỜ</th><th>TRẠNG THÁI</th></tr></thead><tbody>{schedule.map(x => <tr key={x.bookingId}><td>#{x.bookingId}</td><td>{viDate(x.startTime)}</td><td>{viTime(x.startTime)} – {viTime(x.endTime)}</td><td>{bookingName[x.status] ?? x.status}</td></tr>)}</tbody></table></div>}
+  const { data: schedule, error: scheduleError, mutate } = useSWR(`room-schedule-${id}-${date}`, () => campusApi.roomSchedule(id, date));
+  return <section className="ws-room-schedule">
+    <div className="ws-room-schedule-head"><div><span>LỊCH SỬ DỤNG</span><h4>{room ? `Phòng ${room.code}` : "Đang tải phòng..."}</h4></div><label className="ws-field">Chọn ngày<input type="date" value={date} onChange={event => setDate(event.target.value)} /></label></div>
+    {(roomError || scheduleError) && <p role="alert">Không tải được lịch phòng. <button className="ws-row-action" onClick={() => void mutate()}>Thử lại</button></p>}
+    {!schedule && !scheduleError && <p className="ws-room-schedule-empty">Đang tải lịch phòng...</p>}
+    {schedule?.length === 0 && <p className="ws-room-schedule-empty">Không có lịch sử dụng trong ngày này.</p>}
+    {schedule && schedule.length > 0 && <div className="ws-room-schedule-list">{schedule.map(x => <div key={x.bookingId}><strong>{viTime(x.startTime)} – {viTime(x.endTime)}</strong><span>Yêu cầu #{x.bookingId}</span><em>{bookingName[x.status] ?? x.status}</em></div>)}</div>}
   </section>;
 }
 

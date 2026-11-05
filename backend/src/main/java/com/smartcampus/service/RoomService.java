@@ -7,6 +7,7 @@ import com.smartcampus.entity.Room;
 import com.smartcampus.exception.ResourceNotFoundException;
 import com.smartcampus.repository.BookingRepository;
 import com.smartcampus.repository.RoomRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,10 +23,12 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final BookingRepository bookingRepository;
+    private final JdbcTemplate jdbc;
 
-    public RoomService(RoomRepository roomRepository, BookingRepository bookingRepository) {
+    public RoomService(RoomRepository roomRepository, BookingRepository bookingRepository, JdbcTemplate jdbc) {
         this.roomRepository = roomRepository;
         this.bookingRepository = bookingRepository;
+        this.jdbc = jdbc;
     }
 
     public List<RoomResponse> getRooms() {
@@ -61,7 +64,8 @@ public class RoomService {
     }
 
     private RoomResponse toResponse(Room room) {
-        return new RoomResponse(room.getId(), room.getCode(), room.getName(), room.getLocation(), room.getStatus(), room.getType());
+        Integer capacity = jdbc.queryForObject("SELECT count(*) FROM seats WHERE room_id = ?", Integer.class, room.getId());
+        return new RoomResponse(room.getId(), room.getCode(), room.getName(), room.getLocation(), room.getStatus(), room.getType(), capacity);
     }
 
     private RoomScheduleResponse toScheduleResponse(Booking booking) {

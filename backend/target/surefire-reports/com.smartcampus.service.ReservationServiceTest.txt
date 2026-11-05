@@ -1,4 +1,52 @@
 -------------------------------------------------------------------------------
 Test set: com.smartcampus.service.ReservationServiceTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.822 s -- in com.smartcampus.service.ReservationServiceTest
+Tests run: 5, Failures: 2, Errors: 2, Skipped: 0, Time elapsed: 0.318 s <<< FAILURE! -- in com.smartcampus.service.ReservationServiceTest
+com.smartcampus.service.ReservationServiceTest.rejectsWrongRoomType -- Time elapsed: 0.253 s <<< ERROR!
+org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
+
+Unnecessary stubbings detected.
+Clean & maintainable test code requires zero unnecessary code.
+Following stubbings are unnecessary (click to navigate to relevant line of code):
+  1. -> at com.smartcampus.service.ReservationServiceTest.rejectsWrongRoomType(ReservationServiceTest.java:110)
+Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
+	at org.mockito.junit.jupiter.MockitoExtension.lambda$afterEach$2(MockitoExtension.java:200)
+	at java.base/java.util.Optional.ifPresent(Optional.java:178)
+	at org.mockito.junit.jupiter.MockitoExtension.afterEach(MockitoExtension.java:198)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.smartcampus.service.ReservationServiceTest.createTranslatesPostgresExclusionViolationToReservationConflict -- Time elapsed: 0.012 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <com.smartcampus.exception.ReservationConflictException> but was: <java.lang.IllegalArgumentException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)
+	at com.smartcampus.service.ReservationServiceTest.createTranslatesPostgresExclusionViolationToReservationConflict(ReservationServiceTest.java:80)
+Caused by: java.lang.IllegalArgumentException: Room is not of type CLASSROOM
+	at com.smartcampus.service.ReservationService.create(ReservationService.java:83)
+	at com.smartcampus.service.ReservationService.create(ReservationService.java:64)
+	at com.smartcampus.service.ReservationServiceTest.lambda$0(ReservationServiceTest.java:81)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)
+	... 3 more
+
+com.smartcampus.service.ReservationServiceTest.createDoesNotMislabelOtherIntegrityViolationsAsReservationConflicts -- Time elapsed: 0.004 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <org.springframework.dao.DataIntegrityViolationException> but was: <java.lang.IllegalArgumentException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)
+	at com.smartcampus.service.ReservationServiceTest.createDoesNotMislabelOtherIntegrityViolationsAsReservationConflicts(ReservationServiceTest.java:91)
+Caused by: java.lang.IllegalArgumentException: Room is not of type CLASSROOM
+	at com.smartcampus.service.ReservationService.create(ReservationService.java:83)
+	at com.smartcampus.service.ReservationService.create(ReservationService.java:64)
+	at com.smartcampus.service.ReservationServiceTest.lambda$1(ReservationServiceTest.java:93)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)
+	... 3 more
+
+com.smartcampus.service.ReservationServiceTest.cancellingBookingCancelsActiveSessionSeats -- Time elapsed: 0.036 s <<< ERROR!
+com.smartcampus.exception.ResourceNotFoundException: Reservation not found: 0
+	at com.smartcampus.service.ReservationService.assertRoomType(ReservationService.java:207)
+	at com.smartcampus.service.ReservationService.cancel(ReservationService.java:166)
+	at com.smartcampus.service.ReservationServiceTest.cancellingBookingCancelsActiveSessionSeats(ReservationServiceTest.java:128)
+

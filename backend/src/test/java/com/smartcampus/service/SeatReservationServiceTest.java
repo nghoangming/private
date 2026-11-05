@@ -79,6 +79,19 @@ class SeatReservationServiceTest {
     }
 
     @Test
+    void allowsSeatWhenUserHasReservationInAnotherSession() {
+        activeSessionAndSeat();
+        when(reservations.saveAndFlush(any(SeatReservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.create(request, 1L);
+
+        verify(reservations).existsByClassSessionIdAndUserIdAndStatus(20L, 1L, "CONFIRMED");
+        verify(reservations, never()).findByUserIdAndStatus(1L, "CONFIRMED");
+        verify(reservations).saveAndFlush(any(SeatReservation.class));
+    }
+
+    @Test
     void translatesDatabaseUniqueRaceForSeatAndUser() {
         activeSessionAndSeat();
         for (String constraint : new String[] {

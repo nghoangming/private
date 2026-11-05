@@ -82,8 +82,9 @@ public class SeatReservationService {
                 session.getId(), seat.getId(), "CONFIRMED")) {
             throw new SeatConflictException("Seat is already reserved for this class session");
         }
-        if (!seatReservationRepository.findByUserIdAndStatus(userId, "CONFIRMED").isEmpty()) {
-            throw new SeatConflictException("User already has a seat");
+        if (seatReservationRepository.existsByClassSessionIdAndUserIdAndStatus(
+                session.getId(), userId, "CONFIRMED")) {
+            throw new SeatConflictException("User already has a seat in this class session");
         }
 
         try {
@@ -114,9 +115,13 @@ public class SeatReservationService {
     }
 
     @Transactional
-    public SeatReservationResponse cancel(Long id) {
+    public SeatReservationResponse cancel(Long id, Long userId) {
         SeatReservation reservation = seatReservationRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat reservation not found: " + id));
+        if (!reservation.getUserId().equals(userId)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Not your seat reservation");
+        }
         if ("CANCELLED".equals(reservation.getStatus())) {
             throw new IllegalArgumentException("Seat reservation is already cancelled: " + id);
         }
