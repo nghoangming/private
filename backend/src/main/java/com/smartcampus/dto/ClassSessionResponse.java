@@ -10,5 +10,12 @@ public record ClassSessionResponse(
         Long roomId,
         OffsetDateTime startTime,
         OffsetDateTime endTime,
-        OffsetDateTime createdAt
-) { }
+        OffsetDateTime createdAt,
+        String calendarStatus
+) {
+    public ClassSessionResponse(Long id, Long bookingId, String courseCode, String title,
+                                Long roomId, OffsetDateTime startTime, OffsetDateTime endTime,
+                                OffsetDateTime createdAt) {
+        this(id, bookingId, courseCode, title, roomId, startTime, endTime, createdAt, "SCHEDULED");
+    }
+}

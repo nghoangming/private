@@ -24,14 +24,14 @@ public class QrAttendanceService {
     private final SecureRandom random = new SecureRandom();
     public QrAttendanceService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
-    private record Session(Long id, Long bookingId, Long teacherId, OffsetDateTime start, OffsetDateTime end, String bookingStatus) { }
+    private record Session(Long id, Long bookingId, Long teacherId, OffsetDateTime start, OffsetDateTime end, String bookingStatus, String calendarStatus) { }
     private Session session(Long id) {
         List<Session> rows = jdbc.query("""
-            SELECT cs.class_session_id, cs.booking_id, b.user_id, cs.start_time, cs.end_time, b.status
+            SELECT cs.class_session_id, cs.booking_id, b.user_id, cs.start_time, cs.end_time, b.status, cs.calendar_status
             FROM class_sessions cs JOIN bookings b ON b.booking_id = cs.booking_id
             WHERE cs.class_session_id = ?
             """, (rs, n) -> new Session(rs.getLong(1), rs.getLong(2), rs.getLong(3),
-                rs.getObject(4, OffsetDateTime.class), rs.getObject(5, OffsetDateTime.class), rs.getString(6)), id);
+                rs.getObject(4, OffsetDateTime.class), rs.getObject(5, OffsetDateTime.class), rs.getString(6), rs.getString(7)), id);
         if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Class session not found");
         return rows.getFirst();
     }
@@ -43,6 +43,8 @@ public class QrAttendanceService {
         if (count == null || count == 0) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Role not allowed");
     }
     private void open(Session session, OffsetDateTime now) {
+        if ("ABSENT".equals(session.calendarStatus()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Giảng viên đã báo vắng buổi học.");
         if (!"CONFIRMED".equals(session.bookingStatus()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Buổi học chưa được duyệt; chưa thể tạo hoặc quét QR.");
         if (now.isBefore(session.start().plusMinutes(5)))

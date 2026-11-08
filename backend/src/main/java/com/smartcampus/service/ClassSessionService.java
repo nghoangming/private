@@ -9,6 +9,7 @@ import com.smartcampus.exception.ResourceNotFoundException;
 import com.smartcampus.repository.BookingRepository;
 import com.smartcampus.repository.ClassSessionRepository;
 import com.smartcampus.repository.RoomRepository;
+import com.smartcampus.repository.SeatReservationRepository;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -21,13 +22,16 @@ public class ClassSessionService {
     private final BookingRepository bookingRepository;
     private final ClassSessionRepository classSessionRepository;
     private final RoomRepository roomRepository;
+    private final SeatReservationRepository seatReservationRepository;
 
     public ClassSessionService(BookingRepository bookingRepository,
                                ClassSessionRepository classSessionRepository,
-                               RoomRepository roomRepository) {
+                               RoomRepository roomRepository,
+                               SeatReservationRepository seatReservationRepository) {
         this.bookingRepository = bookingRepository;
         this.classSessionRepository = classSessionRepository;
         this.roomRepository = roomRepository;
+        this.seatReservationRepository = seatReservationRepository;
     }
 
     @Transactional
@@ -51,7 +55,7 @@ public class ClassSessionService {
             throw new IllegalArgumentException("Course code or title is too long");
         }
         try {
-            return toResponse(classSessionRepository.saveAndFlush(ClassSession.create(booking, code, title)));
+            return toResponse(classSessionRepository.saveAndFlush(ClassSession.create(booking, code, title, Boolean.TRUE.equals(request.makeup()))));
         } catch (DataIntegrityViolationException ex) {
             if (DatabaseConflict.isConstraint(ex, "23505", "uq_class_sessions_booking")) {
                 throw new ReservationConflictException("Booking already has a class session: " + booking.getId());
@@ -64,7 +68,8 @@ public class ClassSessionService {
     public List<ClassSessionResponse> list() {
         return classSessionRepository.findAllByOrderByStartTimeAsc().stream()
                 .filter(session -> bookingRepository.findById(session.getBookingId())
-                        .map(booking -> "PENDING".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus()))
+                        .map(booking -> "PENDING".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus())
+                                || ("ABSENT".equals(session.getCalendarStatus()) && "CANCELLED".equals(booking.getStatus())))
                         .orElse(false))
                 .map(this::toResponse).toList();
     }
@@ -90,9 +95,26 @@ public class ClassSessionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id)));
     }
 
+    @Transactional
+    public ClassSessionResponse reportAbsence(Long id) {
+        ClassSession session = classSessionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
+        Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
+        if (!"CONFIRMED".equals(booking.getStatus()))
+            throw new IllegalArgumentException("Only approved class sessions can be reported absent");
+        if (session.getCalendarStatus().equals("ABSENT"))
+            throw new IllegalArgumentException("Class session is already reported absent");
+        session.reportAbsence();
+        seatReservationRepository.cancelActiveForSession(session.getId());
+        booking.cancel();
+        bookingRepository.saveAndFlush(booking);
+        return toResponse(classSessionRepository.saveAndFlush(session));
+    }
+
     private ClassSessionResponse toResponse(ClassSession session) {
         return new ClassSessionResponse(session.getId(), session.getBookingId(),
                 session.getCourseCode(), session.getTitle(), session.getRoomId(),
-                session.getStartTime(), session.getEndTime(), session.getCreatedAt());
+                session.getStartTime(), session.getEndTime(), session.getCreatedAt(), session.getCalendarStatus());
     }
 }

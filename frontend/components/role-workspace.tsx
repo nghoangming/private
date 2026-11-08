@@ -34,23 +34,10 @@ export function RoleWorkspace({ role }: { role: Role }) {
   const [pendingAction, setPendingAction] = useState<{ title: string; detail: string; action: () => void } | null>(null);
   const [edits, setEdits] = useState<Partial<WorkspaceData>>({});
   const { data: source, error, isLoading, mutate } = useSWR(account ? `campus-live-${role}-${account.id}` : null, async (): Promise<WorkspaceData> => {
-    const dateParts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-    const part = (type: string) => dateParts.find(item => item.type === type)?.value ?? "";
-    const today = `${part("year")}-${part("month")}-${part("day")}`;
-    const todayUtc = new Date(`${today}T00:00:00Z`);
-    const weekStart = new Date(todayUtc);
-    weekStart.setUTCDate(todayUtc.getUTCDate() - ((todayUtc.getUTCDay() + 6) % 7));
-    const weekEnd = new Date(todayUtc);
-    weekEnd.setUTCDate(todayUtc.getUTCDate() + (7 - (todayUtc.getUTCDay() || 7)));
     const [apiRooms, apiReservations, apiSessions, incidents, users, equipment] = await Promise.all([campusApi.rooms(), campusApi.reservations(), campusApi.sessions(), demoCampusApi.incidents(), demoCampusApi.users(), demoCampusApi.equipment()]);
     const rooms = apiRooms.map(room => ({ ...room, status: room.status as "ACTIVE" | "MAINTENANCE" }));
     const reservations = apiReservations.map(reservation => ({ ...reservation, roomCode: rooms.find(room => room.id === reservation.roomId)?.code }));
-    const dailySessions = role === "STUDENT" ? apiSessions.filter(session => {
-      const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(session.startTime));
-      const value = (type: string) => parts.find(item => item.type === type)?.value ?? "";
-      return `${value("year")}-${value("month")}-${value("day")}` >= weekStart.toISOString().slice(0, 10) && `${value("year")}-${value("month")}-${value("day")}` <= weekEnd.toISOString().slice(0, 10);
-    }) : apiSessions;
-    const sessions = dailySessions.map(session => ({ id: session.id, bookingId: session.bookingId, subject: session.title, className: session.courseCode, roomId: session.roomId, roomCode: rooms.find(room => room.id === session.roomId)?.code ?? "", startTime: session.startTime, endTime: session.endTime, status: "Sắp diễn ra" as const, calendarStatus: session.calendarStatus ?? "SCHEDULED" as const, teacherId: reservations.find(booking => booking.id === session.bookingId)?.userId ?? 2 }));
+    const sessions = apiSessions.map(session => ({ id: session.id, bookingId: session.bookingId, subject: session.title, className: session.courseCode, roomId: session.roomId, roomCode: rooms.find(room => room.id === session.roomId)?.code ?? "", startTime: session.startTime, endTime: session.endTime, status: "Sắp diễn ra" as const, calendarStatus: session.calendarStatus ?? "SCHEDULED" as const, teacherId: reservations.find(booking => booking.id === session.bookingId)?.userId ?? 2 }));
     const seats: WorkspaceData["seats"] = [];
     return { rooms, reservations, seats, incidents, sessions, users, equipment };
   }, { revalidateOnMount: true, revalidateOnFocus: true, refreshInterval: 30000 });

@@ -43,6 +43,7 @@ public class SeatReservationService {
     @Transactional(readOnly = true)
     public List<SeatResponse> listSeats(Long classSessionId) {
         ClassSession session = findSession(classSessionId);
+        requireHeldSession(session);
         Booking booking = bookingRepository.findById(session.getBookingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
         if (!"PENDING".equals(booking.getStatus()) && !"CONFIRMED".equals(booking.getStatus())) {
@@ -64,6 +65,7 @@ public class SeatReservationService {
     @Transactional
     public SeatReservationResponse create(SeatReservationRequest request, Long userId) {
         ClassSession session = findSession(request.classSessionId());
+        requireHeldSession(session);
         Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
         if (!"PENDING".equals(booking.getStatus()) && !"CONFIRMED".equals(booking.getStatus())) {
@@ -132,6 +134,12 @@ public class SeatReservationService {
     private ClassSession findSession(Long id) {
         return classSessionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
+    }
+
+    private void requireHeldSession(ClassSession session) {
+        if ("ABSENT".equals(session.getCalendarStatus())) {
+            throw new IllegalArgumentException("Teacher reported absence for this class session");
+        }
     }
 
     private SeatReservationResponse toResponse(SeatReservation reservation) {
