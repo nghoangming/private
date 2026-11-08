@@ -37,6 +37,9 @@ public class ClassSession {
     @Column(name = "calendar_status", nullable = false, length = 20)
     private String calendarStatus = "SCHEDULED";
 
+    @Column(name = "absence_previous_status", length = 20)
+    private String absencePreviousStatus;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -57,7 +60,9 @@ public class ClassSession {
         return new ClassSession(booking, courseCode, title, makeup);
     }
 
-    public void reportAbsence() { this.calendarStatus = "ABSENT"; }
+    public void requestAbsence() { this.absencePreviousStatus = this.calendarStatus; this.calendarStatus = "ABSENCE_PENDING"; }
+    public void approveAbsence() { this.calendarStatus = "ABSENT"; this.absencePreviousStatus = null; }
+    public void rejectAbsence() { this.calendarStatus = this.absencePreviousStatus == null ? "SCHEDULED" : this.absencePreviousStatus; this.absencePreviousStatus = null; }
     public String getCalendarStatus() { return calendarStatus; }
 
     public Long getId() { return id; }

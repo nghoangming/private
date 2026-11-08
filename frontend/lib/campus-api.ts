@@ -2,6 +2,9 @@ import { demoAuth } from "@/lib/demo-auth";
 
 export type ApiRoom = { id: number; code: string; name: string; location: string; status: "ACTIVE" | "MAINTENANCE"; type: "THEORY" | "LAB" | "STUDY"; capacity: number };
 export type ApiRoomWrite = Omit<ApiRoom, "id">;
+export type ApiProfile = { id: number; code: string; name: string; email: string; faculty: string | null; roles: string[] };
+export type ApiAdminUser = { id: number; code: string; name: string; email: string; faculty: string | null; role: "ADMIN" | "TEACHER" | "STUDENT"; verified: boolean };
+export type ApiCsvImport = { total: number; created: number; failed: number; rows: { line: number; code: string; email: string; id: number | null; error: string | null }[] };
 
 export async function availableRooms(date: string, startTime: string, endTime: string): Promise<ApiRoom[]> {
   const params = new URLSearchParams({ date, startTime, endTime });
@@ -30,13 +33,35 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export type ApiReservation = { id: number; userId: number; roomId: number; startTime: string; endTime: string; status: "PENDING" | "CONFIRMED" | "CANCELLED" | "REJECTED"; createdAt: string };
-export type ApiClassSession = { id: number; bookingId: number; courseCode: string; title: string; roomId: number; startTime: string; endTime: string; calendarStatus?: "SCHEDULED" | "ABSENT" | "MAKEUP" };
+export type ApiClassSession = { id: number; bookingId: number; courseCode: string; title: string; roomId: number; startTime: string; endTime: string; calendarStatus?: "SCHEDULED" | "ABSENCE_PENDING" | "ABSENT" | "MAKEUP"; teacherId: number | null };
 export type ApiSeat = { id: number; roomId: number; seatNumber: number; status: "AVAILABLE" | "RESERVED" | "DISABLED" | "OCCUPIED" | "MAINTENANCE" };
 export type ApiSeatReservation = { id: number; classSessionId: number; seatId: number; userId: number; roomId: number; status: string };
 export type ApiQr = { classSessionId: number; token: string; expiresAt: string };
-export type ApiAttendance = { id: number | null; classSessionId: number; userId: number; seatId: number; seatNumber: number; status: "PRESENT" | "NOT_CHECKED_IN"; checkedInAt: string | null };
+export type ApiAttendance = { id: number | null; classSessionId: number; userId: number; seatId: number; seatNumber: number; status: "PRESENT" | "NOT_CHECKED_IN"; checkedInAt: string | null; studentName: string | null };
 export type ApiRoomSchedule = { bookingId: number; startTime: string; endTime: string; status: ApiReservation["status"] };
 export const campusApi = {
+  myProfile: () => api<ApiProfile>("/users/me"),
+  updateProfile: (name: string) => api<ApiProfile>("/users/me", { method: "PATCH", body: JSON.stringify({ name }) }),
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const token = demoAuth.token();
+    const response = await fetch("/api/v1/users/me/password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ currentPassword, newPassword }) });
+    if (!response.ok) { const body = await response.json().catch(() => null) as { message?: string } | null; throw new Error(body?.message ?? `API ${response.status}`); }
+  },
+  teacherProfile: (id: number) => api<ApiProfile>(`/users/${id}/public`),
+  users: () => api<ApiAdminUser[]>("/users"),
+  setStudentFaculty: (id: number, faculty: string) => api<ApiProfile>(`/users/${id}/faculty`, { method: "PATCH", body: JSON.stringify({ faculty }) }),
+  inviteUser: (data: { code: string; name: string; email: string; role: "STUDENT" | "TEACHER"; faculty: string }) => api<{ id: number; email: string; role: string; faculty: string }>("/admin/invitations", { method: "POST", body: JSON.stringify(data) }),
+  importUsers: async (file: File): Promise<ApiCsvImport> => {
+    const token = demoAuth.token();
+    if (!token) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    const body = new FormData(); body.append("file", file);
+    const response = await fetch("/api/v1/admin/invitations/import", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { message?: string; detail?: string } | null;
+      throw new Error(payload?.message ?? payload?.detail ?? `Không thể nhập CSV (HTTP ${response.status}).`);
+    }
+    return response.json() as Promise<ApiCsvImport>;
+  },
   rooms: () => api<ApiRoom[]>("/rooms"),
   room: (id: number) => api<ApiRoom>(`/rooms/${id}`),
   createRoom: (data: ApiRoomWrite) => api<ApiRoom>("/rooms", { method: "POST", body: JSON.stringify(data) }),
@@ -52,6 +77,7 @@ export const campusApi = {
   session: (id: number) => api<ApiClassSession>(`/class-sessions/${id}`),
   createSession: (bookingId: number, courseCode: string, title: string, makeup = false) => api<ApiClassSession>("/class-sessions", { method: "POST", body: JSON.stringify({ bookingId, courseCode, title, makeup }) }),
   reportAbsence: (id: number) => api<ApiClassSession>(`/class-sessions/${id}/absence`, { method: "PATCH" }),
+  reviewAbsence: (id: number, decision: "approve" | "reject") => api<ApiClassSession>(`/class-sessions/${id}/absence/${decision}`, { method: "PATCH" }),
   seats: (sessionId: number) => api<ApiSeat[]>(`/class-sessions/${sessionId}/seats`),
   mySeats: (_userId: number) => api<ApiSeatReservation[]>("/seat-reservations/mine"),
   seatReservation: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}`),

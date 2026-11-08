@@ -107,7 +107,7 @@ public class QrAttendanceService {
                 VALUES (?, ?, ?, 'PRESENT', ?) RETURNING attendance_id
                 """, Long.class, session.bookingId(), studentId, checkinId, now);
             return new AttendanceResponse(attendanceId, sessionId, studentId, seats.getFirst()[0],
-                    (int) seats.getFirst()[1], "PRESENT", now);
+                    (int) seats.getFirst()[1], "PRESENT", now, null);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already checked in", ex);
         }
@@ -133,14 +133,15 @@ public class QrAttendanceService {
         Session session = session(sessionId);
         if (!session.teacherId().equals(teacherId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your class session");
         return jdbc.query("""
-            SELECT a.attendance_id, sr.user_id, sr.seat_id, s.seat_number, a.attendance_status, a.check_in_at
+            SELECT a.attendance_id, sr.user_id, sr.seat_id, s.seat_number, a.attendance_status, a.check_in_at, u.full_name
             FROM seat_reservations sr JOIN seats s ON s.seat_id = sr.seat_id
+            JOIN users u ON u.user_id = sr.user_id
             LEFT JOIN attendance a ON a.booking_id = ? AND a.user_id = sr.user_id AND a.attendance_status = 'PRESENT'
             WHERE sr.class_session_id = ? AND sr.status = 'CONFIRMED'
             ORDER BY s.seat_number
             """, (rs, n) -> new AttendanceResponse(rs.getObject(1, Long.class), sessionId, rs.getLong(2), rs.getLong(3),
                 rs.getInt(4), rs.getString(5) == null ? "NOT_CHECKED_IN" : rs.getString(5),
-                rs.getObject(6, OffsetDateTime.class)), session.bookingId(), sessionId);
+                rs.getObject(6, OffsetDateTime.class), rs.getString(7)), session.bookingId(), sessionId);
     }
 
     @Transactional(readOnly = true)

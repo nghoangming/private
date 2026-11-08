@@ -11,6 +11,7 @@ import com.smartcampus.repository.ClassSessionRepository;
 import com.smartcampus.repository.SeatRepository;
 import com.smartcampus.repository.SeatReservationRepository;
 import java.util.Optional;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +53,7 @@ class SeatReservationServiceTest {
         when(session.getId()).thenReturn(20L);
         when(bookings.findByIdForUpdate(10L)).thenReturn(Optional.of(booking));
         when(booking.getStatus()).thenReturn("CONFIRMED");
+        when(booking.getEndTime()).thenReturn(OffsetDateTime.now().plusDays(1));
         when(seats.findByIdForUpdate(30L)).thenReturn(Optional.of(seat));
         when(seat.getRoomId()).thenReturn(40L);
         when(seat.getStatus()).thenReturn("AVAILABLE");

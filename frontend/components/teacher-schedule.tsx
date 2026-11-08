@@ -41,14 +41,13 @@ export function TeacherSchedule({ context: c }: { context: WorkspaceContext }) {
   const bookingStatus = selected ? c.data.reservations.find(item => item.id === selected.bookingId)?.status : undefined;
   const reportAbsence = (session: Session) => c.confirm(
     "Báo vắng buổi học?",
-    `${session.subject} · ${viDate(session.startTime)}. Phòng sẽ được giải phóng và sinh viên sẽ thấy trạng thái báo vắng.`,
+    `${session.subject} · ${viDate(session.startTime)}. Yêu cầu được gửi quản trị viên duyệt. Phòng chỉ được giải phóng sau khi duyệt.`,
     async () => {
       setError("");
       try {
         const saved = await campusApi.reportAbsence(session.id);
-        c.update("sessions", c.data.sessions.map(item => item.id === saved.id ? { ...item, calendarStatus: "ABSENT" } : item));
-        c.update("reservations", c.data.reservations.map(item => item.id === session.bookingId ? { ...item, status: "CANCELLED" } : item));
-        c.notice("Đã báo vắng và giải phóng phòng học.");
+        c.update("sessions", c.data.sessions.map(item => item.id === saved.id ? { ...item, calendarStatus: "ABSENCE_PENDING" } : item));
+        c.notice("Đã gửi yêu cầu báo vắng, đang chờ quản trị viên duyệt.");
         setSelectedId(null);
       } catch (reason) {
         setError(reason instanceof Error ? reason.message : "Không thể báo vắng.");
@@ -63,7 +62,7 @@ export function TeacherSchedule({ context: c }: { context: WorkspaceContext }) {
       <span className="ws-calendar-subject"><small>{session.className === "DEMO" ? "BUỔI DẠY" : session.className}</small><strong>{session.subject}</strong><em>Phòng {session.roomCode}</em><SessionStatus status={session.calendarStatus} teacher /></span>
       <ArrowRight size={18} />
     </button>
-    {approved && session.calendarStatus !== "ABSENT" && <button type="button" className="ws-calendar-absence-action" onClick={() => reportAbsence(session)}>Báo vắng</button>}
+    {approved && session.calendarStatus !== "ABSENT" && session.calendarStatus !== "ABSENCE_PENDING" && new Date(session.endTime).getTime() > Date.now() && <button type="button" className="ws-calendar-absence-action" onClick={() => reportAbsence(session)}>Báo vắng</button>}
   </div>;
 })}</div> : <p className="ws-calendar-empty">{activeDay < today ? "Ngày này đã qua." : "Không có buổi dạy trong ngày này."}</p>}</section>{selected && <div className="ws-seat-modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSelectedId(null); }}><section className="ws-teacher-class-dialog" role="dialog" aria-modal="true" aria-label="Chi tiết buổi dạy"><button type="button" className="ws-student-close" onClick={() => setSelectedId(null)} aria-label="Đóng"><X size={19} /></button><div className="ws-teacher-detail-head"><span>BUỔI DẠY #{selected.id}</span><span className={`ws-teacher-detail-status ${bookingStatus?.toLowerCase() ?? "pending"}`}>{selected.calendarStatus === "ABSENT" ? "Đã báo vắng" : bookingStatus ? bookingName[bookingStatus] : "Chưa có trạng thái"}</span></div><div className="ws-teacher-detail-main"><div className="ws-teacher-detail-date"><strong>{viDate(selected.startTime).slice(0, 5)}</strong><span>{viDate(selected.startTime).slice(6)}</span></div><div><small>{selected.className === "DEMO" ? "BUỔI HỌC" : selected.className}</small><h3>{selected.subject}</h3><SessionStatus status={selected.calendarStatus} teacher /><p>Thông tin buổi dạy và phòng học</p></div></div><div className="ws-teacher-class-facts"><div><small>THỜI GIAN</small><strong>{viTime(selected.startTime)} – {viTime(selected.endTime)}</strong></div><div><small>PHÒNG HỌC</small><strong>{selected.roomCode}</strong></div><div><small>NGÀY DẠY</small><strong>{viDate(selected.startTime)}</strong></div></div><div className="ws-teacher-detail-footer"><button type="button" className="ws-button secondary" onClick={() => setSelectedId(null)}>Đóng chi tiết</button></div></section></div>}</div>;
 }

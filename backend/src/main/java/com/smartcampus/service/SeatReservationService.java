@@ -68,8 +68,8 @@ public class SeatReservationService {
         requireHeldSession(session);
         Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
-        if (!"PENDING".equals(booking.getStatus()) && !"CONFIRMED".equals(booking.getStatus())) {
-            throw new IllegalArgumentException("Class session booking is not active");
+        if (!"CONFIRMED".equals(booking.getStatus()) || !booking.getEndTime().isAfter(java.time.OffsetDateTime.now())) {
+            throw new IllegalArgumentException("Buổi học chưa được duyệt hoặc đã kết thúc, không thể đặt ghế.");
         }
 
         Seat seat = seatRepository.findByIdForUpdate(request.seatId())

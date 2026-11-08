@@ -13,6 +13,7 @@ import com.smartcampus.repository.SeatReservationRepository;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,18 +104,41 @@ public class ClassSessionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
         if (!"CONFIRMED".equals(booking.getStatus()))
             throw new IllegalArgumentException("Only approved class sessions can be reported absent");
-        if (session.getCalendarStatus().equals("ABSENT"))
-            throw new IllegalArgumentException("Class session is already reported absent");
-        session.reportAbsence();
+        if (!session.getEndTime().isAfter(OffsetDateTime.now()))
+            throw new IllegalArgumentException("Buổi học đã kết thúc, không thể báo vắng.");
+        if ("ABSENT".equals(session.getCalendarStatus()) || "ABSENCE_PENDING".equals(session.getCalendarStatus()))
+            throw new IllegalArgumentException("Buổi học đã có yêu cầu báo vắng.");
+        session.requestAbsence();
+        return toResponse(classSessionRepository.saveAndFlush(session));
+    }
+
+    @Transactional
+    public ClassSessionResponse decideAbsence(Long id, boolean approve) {
+        ClassSession session = classSessionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
+        Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
+        if (!"ABSENCE_PENDING".equals(session.getCalendarStatus()))
+            throw new IllegalArgumentException("Buổi học không có yêu cầu báo vắng đang chờ duyệt.");
+        if (approve) {
+            if (!"CONFIRMED".equals(booking.getStatus()))
+                throw new IllegalArgumentException("Lịch phòng không còn được duyệt.");
+            session.approveAbsence();
+        } else {
+            session.rejectAbsence();
+        }
+        if (approve) {
         seatReservationRepository.cancelActiveForSession(session.getId());
         booking.cancel();
         bookingRepository.saveAndFlush(booking);
+        }
         return toResponse(classSessionRepository.saveAndFlush(session));
     }
 
     private ClassSessionResponse toResponse(ClassSession session) {
         return new ClassSessionResponse(session.getId(), session.getBookingId(),
                 session.getCourseCode(), session.getTitle(), session.getRoomId(),
-                session.getStartTime(), session.getEndTime(), session.getCreatedAt(), session.getCalendarStatus());
+                session.getStartTime(), session.getEndTime(), session.getCreatedAt(), session.getCalendarStatus(),
+                bookingRepository.findById(session.getBookingId()).map(Booking::getUserId).orElse(null));
     }
 }

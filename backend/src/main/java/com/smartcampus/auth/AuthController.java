@@ -29,7 +29,7 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         List<User> users = jdbc.query("""
-            SELECT user_id, full_name, email, password_hash FROM users WHERE lower(email) = lower(?)
+            SELECT user_id, full_name, email, password_hash FROM users WHERE lower(email) = lower(?) AND email_verified = TRUE
             """, (rs, row) -> new User(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)), request.email().trim());
         if (users.isEmpty() || !passwords.matches(request.password(), users.getFirst().passwordHash()))
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không đúng.");

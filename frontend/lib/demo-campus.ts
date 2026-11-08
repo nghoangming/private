@@ -1,7 +1,7 @@
 import { mockAdminApi, type Incident, type Reservation, type Room, type Seat } from "@/lib/admin-data";
 
-export type Session = { id: number; bookingId?: number; subject: string; className: string; roomId: number; roomCode: string; startTime: string; endTime: string; status: "Sắp diễn ra" | "Đang học" | "Đã kết thúc"; calendarStatus?: "SCHEDULED" | "ABSENT" | "MAKEUP"; teacherId: number };
-export type CampusUser = { id: number; name: string; email: string; role: "ADMIN" | "TEACHER" | "STUDENT"; status: "ACTIVE" | "INACTIVE" };
+export type Session = { id: number; bookingId?: number; subject: string; className: string; roomId: number; roomCode: string; startTime: string; endTime: string; status: "Sắp diễn ra" | "Đang học" | "Đã kết thúc"; calendarStatus?: "SCHEDULED" | "ABSENCE_PENDING" | "ABSENT" | "MAKEUP"; teacherId: number };
+export type CampusUser = { id: number; name: string; email: string; role: "ADMIN" | "TEACHER" | "STUDENT"; status: "ACTIVE" | "INACTIVE"; faculty?: string | null };
 export type Equipment = { id: number; roomId: number; name: string; status: "Tốt" | "Cần kiểm tra" };
 export type RoomPurpose = "THEORY" | "LAB" | "STUDY";
 export const demoRoomPurposes: Record<number, RoomPurpose> = { 1: "THEORY", 2: "THEORY", 3: "LAB", 4: "LAB", 5: "STUDY", 6: "THEORY" };

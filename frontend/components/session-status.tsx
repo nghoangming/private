@@ -1,10 +1,10 @@
 import { CalendarCheck2, CalendarPlus2, CalendarX2 } from "lucide-react";
 
-export type CalendarStatus = "SCHEDULED" | "ABSENT" | "MAKEUP";
+export type CalendarStatus = "SCHEDULED" | "ABSENCE_PENDING" | "ABSENT" | "MAKEUP";
 
 export function SessionStatus({ status = "SCHEDULED", teacher = false }: { status?: CalendarStatus; teacher?: boolean }) {
   const Icon = status === "ABSENT" ? CalendarX2 : status === "MAKEUP" ? CalendarPlus2 : CalendarCheck2;
-  const label = status === "ABSENT" ? "Đã báo vắng" : status === "MAKEUP" ? teacher ? "Dạy bù" : "Học bù" : "Có tiết";
+  const label = status === "ABSENCE_PENDING" ? "Chờ duyệt báo vắng" : status === "ABSENT" ? "Đã báo vắng" : status === "MAKEUP" ? teacher ? "Dạy bù" : "Học bù" : "Có tiết";
   return <span className={`ws-session-status ${status.toLowerCase()}`}><Icon size={15} aria-hidden="true" />{label}</span>;
 }
 

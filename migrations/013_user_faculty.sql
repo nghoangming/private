@@ -1,0 +1,12 @@
+BEGIN;
+ALTER TABLE users ADD COLUMN faculty VARCHAR(100);
+ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT TRUE;
+CREATE INDEX idx_users_faculty ON users (faculty);
+CREATE TABLE user_invites (
+    invite_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ
+);
+COMMIT;

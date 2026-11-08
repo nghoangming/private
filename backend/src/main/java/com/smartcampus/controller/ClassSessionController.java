@@ -64,6 +64,20 @@ public class ClassSessionController {
         return service.reportAbsence(id);
     }
 
+    @PatchMapping("/{id}/absence/approve")
+    public ClassSessionResponse approveAbsence(@PathVariable Long id,
+                                                @RequestAttribute("authenticatedUserId") Long userId) {
+        access.requireRole(userId, "ADMIN");
+        return service.decideAbsence(id, true);
+    }
+
+    @PatchMapping("/{id}/absence/reject")
+    public ClassSessionResponse rejectAbsence(@PathVariable Long id,
+                                               @RequestAttribute("authenticatedUserId") Long userId) {
+        access.requireRole(userId, "ADMIN");
+        return service.decideAbsence(id, false);
+    }
+
     @GetMapping
     public List<ClassSessionResponse> list(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,

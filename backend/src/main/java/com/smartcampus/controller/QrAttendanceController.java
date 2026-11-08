@@ -17,7 +17,7 @@ public class QrAttendanceController {
     public record QrResponse(Long classSessionId, String token, OffsetDateTime expiresAt) { }
     public record CheckInRequest(@NotBlank String qrCode, Long classSessionId) { }
     public record AttendanceResponse(Long id, Long classSessionId, Long userId, Long seatId,
-                                     Integer seatNumber, String status, OffsetDateTime checkedInAt) { }
+                                     Integer seatNumber, String status, OffsetDateTime checkedInAt, String studentName) { }
 
     @PostMapping("/class-sessions/{id}/qr")
     public QrResponse generate(@PathVariable Long id,
