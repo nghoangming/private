@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,11 +45,17 @@ public class UserInvitationService {
 
     @Transactional
     public InviteResponse invite(InviteRequest request, Long adminId) {
+        return inviteTo(request, adminId, request.email());
+    }
+
+    @Transactional
+    public InviteResponse inviteTo(InviteRequest request, Long adminId, String deliveryEmail) {
         access.requireRole(adminId, "ADMIN");
         if (appPassword.isBlank()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Chưa cấu hình SMTP_APP_PASSWORD.");
         if (request.code() == null || request.code().isBlank() || request.code().length() > 20
                 || request.name() == null || request.name().isBlank() || request.name().length() > 100
                 || request.email() == null || !request.email().contains("@") || request.email().length() > 100
+                || deliveryEmail == null || !deliveryEmail.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
                 || request.role() == null || !List.of("STUDENT", "TEACHER").contains(request.role())
                 || (request.faculty() != null && request.faculty().length() > 100)
                 || (request.faculty() == null || request.faculty().isBlank())
@@ -66,12 +73,14 @@ public class UserInvitationService {
             jdbc.update("INSERT INTO user_roles(user_id, role_id) SELECT ?, role_id FROM roles WHERE role_name = ?", id, request.role());
             jdbc.update("INSERT INTO user_invites(user_id, token_hash, expires_at) VALUES (?, ?, ?)", id, hash(token), OffsetDateTime.now().plusHours(24));
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(sender); message.setTo(request.email().trim());
+            message.setFrom(sender); message.setTo(deliveryEmail.trim());
             message.setSubject("Kích hoạt tài khoản TDTU Smart Campus");
-            message.setText("Xin chào " + request.name().trim() + ",\n\nMở liên kết sau để đặt mật khẩu và kích hoạt tài khoản (hiệu lực 24 giờ):\n"
+            message.setText("Xin chào " + request.name().trim() + ",\n\nTài khoản đăng nhập: " + request.email().trim() + "\n\nMở liên kết sau để đặt mật khẩu và kích hoạt tài khoản (hiệu lực 24 giờ):\n"
                     + frontendUrl.replaceAll("/$", "") + "/activate?token=" + token + "\n\nNếu không yêu cầu tài khoản, hãy bỏ qua email này.");
             mail.send(message);
             return new InviteResponse(id, request.email().trim(), request.role(), request.faculty());
+        } catch (MailException ex) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Không gửi được email kích hoạt tới email cá nhân.", ex);
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã tài khoản hoặc email đã tồn tại.", ex);
         }

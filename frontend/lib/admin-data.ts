@@ -5,7 +5,7 @@ export interface Room {
   location: string;
   status: "ACTIVE" | "MAINTENANCE";
   capacity?: number;
-  type?: "THEORY" | "LAB" | "STUDY";
+  type?: "THEORY" | "LAB" | "SELF_STUDY";
 }
 
 export interface Reservation {
@@ -33,8 +33,11 @@ export interface Incident {
   category: "PROJECTOR" | "AC" | "LIGHTING" | "SOUND" | "OTHER";
   description: string;
   reporterName: string;
-  priority: "HIGH" | "MEDIUM" | "LOW";
-  status: "OPEN" | "IN_PROGRESS" | "RESOLVED";
+  priority?: "HIGH" | "MEDIUM" | "LOW";
+  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "REJECTED";
+  reportedBy?: number;
+  assignedTo?: number | null;
+  resourceId?: number | null;
   createdAt: string;
 }
 

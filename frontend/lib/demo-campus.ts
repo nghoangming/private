@@ -2,9 +2,9 @@ import { mockAdminApi, type Incident, type Reservation, type Room, type Seat } f
 
 export type Session = { id: number; bookingId?: number; subject: string; className: string; roomId: number; roomCode: string; startTime: string; endTime: string; status: "Sắp diễn ra" | "Đang học" | "Đã kết thúc"; calendarStatus?: "SCHEDULED" | "ABSENCE_PENDING" | "ABSENT" | "MAKEUP"; teacherId: number };
 export type CampusUser = { id: number; name: string; email: string; role: "ADMIN" | "TEACHER" | "STUDENT"; status: "ACTIVE" | "INACTIVE"; faculty?: string | null };
-export type Equipment = { id: number; roomId: number; name: string; status: "Tốt" | "Cần kiểm tra" };
-export type RoomPurpose = "THEORY" | "LAB" | "STUDY";
-export const demoRoomPurposes: Record<number, RoomPurpose> = { 1: "THEORY", 2: "THEORY", 3: "LAB", 4: "LAB", 5: "STUDY", 6: "THEORY" };
+export type Equipment = { id: number; roomId: number; name: string; status: "Tốt" | "Cần kiểm tra" | "Đang sử dụng" | "Bảo trì"; type?: string; quantity?: number };
+export type RoomPurpose = "THEORY" | "LAB" | "SELF_STUDY";
+export const demoRoomPurposes: Record<number, RoomPurpose> = { 1: "THEORY", 2: "THEORY", 3: "LAB", 4: "LAB", 5: "SELF_STUDY", 6: "THEORY" };
 export type AttendanceSeat = { seatNumber: number; studentId?: string; studentName?: string; status: "PRESENT" | "ABSENT" | "EMPTY"; checkedInAt?: string };
 
 const day = (offset: number, hour: number) => {

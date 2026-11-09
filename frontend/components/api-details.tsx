@@ -20,21 +20,21 @@ export function RoomApiDetails({ id }: { id: number }) {
 
 export function ReservationApiDetails({ id, kind }: { id: number; kind: "classroom" | "study" }) {
   const { data, error } = useSWR(`reservation-detail-${kind}-${id}`, () => campusApi.reservation(kind, id));
-  if (error) return <p role="alert">Không tải được chi tiết yêu cầu từ API.</p>;
+  if (error) return <p role="alert">Không tải được chi tiết yêu cầu.</p>;
   if (!data) return <p>Đang tải chi tiết yêu cầu...</p>;
-  return <p>Chi tiết API: Yêu cầu #{data.id} · Người gửi #{data.userId} · Phòng #{data.roomId} · {viDate(data.startTime)} {viTime(data.startTime)}–{viTime(data.endTime)} · {bookingName[data.status]}</p>;
+  return <p>Yêu cầu #{data.id} · Người gửi #{data.userId} · {viDate(data.startTime)} {viTime(data.startTime)}–{viTime(data.endTime)} · {bookingName[data.status]}</p>;
 }
 
 export function SessionApiDetails({ id, bookingStatus }: { id: number; bookingStatus?: string }) {
   const { data, error } = useSWR(`session-detail-${id}`, () => campusApi.session(id));
-  if (error) return <p role="alert">Không tải được chi tiết buổi học từ API.</p>;
+  if (error) return <p role="alert">Không tải được chi tiết buổi học.</p>;
   if (!data) return <p>Đang tải chi tiết buổi học...</p>;
-  return <p>Chi tiết API: {data.courseCode === "DEMO" ? "Chưa có mã học phần" : data.courseCode} · {data.title} · Yêu cầu #{data.bookingId}{bookingStatus ? ` · ${bookingName[bookingStatus as keyof typeof bookingName] ?? bookingStatus}` : ""} · {viDate(data.startTime)} {viTime(data.startTime)}–{viTime(data.endTime)}</p>;
+  return <p>{data.courseCode === "DEMO" ? "Buổi học" : data.courseCode} · {data.title} · Yêu cầu #{data.bookingId}{bookingStatus ? ` · ${bookingName[bookingStatus as keyof typeof bookingName] ?? bookingStatus}` : ""} · {viDate(data.startTime)} {viTime(data.startTime)}–{viTime(data.endTime)}</p>;
 }
 
 export function SeatReservationApiDetails({ id }: { id: number }) {
   const { data, error } = useSWR(`seat-reservation-detail-${id}`, () => campusApi.seatReservation(id));
-  if (error) return <p role="alert">Không tải được chi tiết đặt ghế từ API.</p>;
+  if (error) return <p role="alert">Không tải được chi tiết đặt ghế.</p>;
   if (!data) return <p>Đang tải chi tiết đặt ghế...</p>;
-  return <p>Chi tiết API: Lượt đặt #{data.id} · Buổi học #{data.classSessionId} · Ghế #{data.seatId} · {data.status}</p>;
+  return <p>Lượt đặt #{data.id} · Buổi học #{data.classSessionId} · Ghế #{data.seatId} · {data.status}</p>;
 }

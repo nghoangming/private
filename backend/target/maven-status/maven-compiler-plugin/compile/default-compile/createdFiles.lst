@@ -1,3 +1,4 @@
+com\smartcampus\controller\ResourceController$Write.class
 com\smartcampus\repository\ClassSessionRepository.class
 com\smartcampus\repository\RoomRepository.class
 com\smartcampus\auth\AuthController.class
@@ -11,9 +12,11 @@ com\smartcampus\controller\NotificationController$Notification.class
 com\smartcampus\service\ClassSessionService.class
 com\smartcampus\dto\ClassSessionRequest.class
 com\smartcampus\service\RoomService.class
+com\smartcampus\controller\IncidentController$Decision.class
 com\smartcampus\controller\ClassroomReservationController.class
 com\smartcampus\controller\AbsenceRequestController$Reason.class
 com\smartcampus\dto\RoomResponse.class
+com\smartcampus\controller\ResourceController.class
 com\smartcampus\service\SeatReservationService.class
 com\smartcampus\service\ReservationService.class
 com\smartcampus\auth\JwtService.class
@@ -39,10 +42,14 @@ com\smartcampus\service\RoomCategory.class
 com\smartcampus\service\DatabaseConflict.class
 com\smartcampus\SmartCampusBackendApplication.class
 com\smartcampus\auth\AuthController$LoginRequest.class
+com\smartcampus\controller\IncidentController$Incident.class
 com\smartcampus\dto\ReservationRequest.class
+com\smartcampus\controller\IncidentController$Report.class
 com\smartcampus\exception\ErrorResponse.class
 com\smartcampus\dto\SeatReservationResponse.class
+com\smartcampus\controller\ResourceController$Resource.class
 com\smartcampus\exception\ResourceNotFoundException.class
+com\smartcampus\controller\IncidentController.class
 com\smartcampusmock\MockBackendApplication.class
 com\smartcampus\controller\RoomController.class
 com\smartcampus\entity\Booking.class

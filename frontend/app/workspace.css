@@ -439,6 +439,11 @@
 .ws-profile-dialog .ws-detail-grid { grid-column: 1 / -1; }
 .ws-import-errors { max-height: 220px; overflow-y: auto; padding: 8px 14px; border: 1px solid #e8cbd0; border-radius: 10px; background: #fff7f8; color: #8a2436; }
 .ws-import-errors p { margin: 7px 0; }
+.ws-import-results { display: grid; gap: 8px; margin-top: 16px; }
+.ws-import-results h4, .ws-import-results p { margin: 0; }
+.ws-import-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 11px 14px; border-radius: 10px; border: 1px solid #cadfe4; background: #ecf8f4; color: #174b43; }
+.ws-import-row.error { border-color: #edc6cf; background: #fff2f4; color: #87293d; }
+.ws-import-row span { overflow-wrap: anywhere; }
 .ws-account-page { padding: 26px 0 40px; min-height: calc(100vh - 190px); }
 .ws-account-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
 .ws-account-heading h1 { margin:7px 0; color:#142f43; font-size:32px; }
@@ -568,3 +573,77 @@
 .ws-intake-actions .ws-field { flex:1; min-width:160px; }
 .ws-intake-actions .ws-button { white-space:nowrap; min-height:40px; }
 @media(max-width:900px) { .ws-intake-card { grid-template-columns:1fr; } .ws-intake-actions { flex-wrap:wrap; } }
+.ws-absence-page { display:grid; gap:20px; }
+.ws-absence-intro { display:flex; align-items:center; gap:18px; padding:24px 28px; border-radius:17px; background:linear-gradient(110deg,#14384b,#24616a); color:#fff; box-shadow:0 15px 30px #17384c1e; }
+.ws-absence-icon { flex:none; width:52px; height:52px; display:grid; place-items:center; border-radius:13px; background:#ffffff20; color:#ffa9ba; }
+.ws-absence-intro>div { flex:1; min-width:0; }
+.ws-absence-intro h3 { margin:0 0 5px; font-size:23px; font-weight:800; }
+.ws-absence-intro p { margin:0; color:#d4e8ec; font-size:14px; line-height:1.55; }
+.ws-absence-intro .ws-button.secondary { flex:none; background:#f2f8fa; }
+.ws-absence-form,.ws-absence-list { overflow:hidden; }
+.ws-absence-form form { display:grid; grid-template-columns:minmax(260px,1fr) minmax(340px,1.4fr); gap:17px; padding:22px 26px 25px; }
+.ws-absence-form textarea,.ws-absence-actions textarea { width:100%; resize:vertical; }
+.ws-absence-form-footer { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:center; gap:14px; color:#58778a; font-size:14px; }
+.ws-absence-form-footer .ws-button { min-width:132px; justify-content:center; }
+.ws-absence-own { display:grid; gap:10px; margin:0 25px 24px; padding:18px; border:1px solid #d1e2e9; border-radius:11px; background:#f0f7f9; }
+.ws-absence-own>strong { color:#15384c; font-size:15px; }
+.ws-absence-own>div { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:9px; border-top:1px solid #d7e5eb; color:#31566d; font-size:14px; }
+.ws-absence-list>.ws-panel-header { align-items:center; }
+.ws-absence-list .ws-form-error { margin:16px 24px 0; }
+.ws-absence-items { display:grid; gap:12px; padding:18px 22px 22px; }
+.ws-absence-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:22px; padding:19px 21px; border:1px solid #cbdde5; border-left:4px solid #bb2443; border-radius:13px; background:#f9fcfd; }
+.ws-absence-item-main { display:grid; gap:8px; min-width:0; }
+.ws-absence-item-top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.ws-absence-item-top strong { color:#15384c; font-size:17px; }
+.ws-absence-item .ws-tag.approved { background:#e8f7ee; color:#298e5d; }
+.ws-header-bell { position:relative; display:grid; place-items:center; width:38px; height:38px; border:1px solid #d8e6eb; border-radius:10px; background:#f1f7f9; color:#244c61; }
+.ws-header-bell:hover { color:#bf1835; border-color:#dcafba; }
+.ws-header-bell span { position:absolute; right:-5px; top:-6px; min-width:18px; height:18px; padding:0 4px; border-radius:10px; background:#bf1835; color:#fff; font-size:10px; font-weight:800; display:grid; place-items:center; }
+.ws-notification-panel { overflow:hidden; }
+.ws-notification-panel .ws-form-error { margin:16px 20px; }
+.ws-notification-empty { padding:35px; color:#658095; text-align:center; }
+.ws-notification-list { display:grid; gap:11px; padding:19px 22px; }
+.ws-notification-item { display:flex; align-items:flex-start; gap:15px; padding:17px 19px; border:1px solid #d7e5eb; border-radius:12px; background:#f7fbfc; }
+.ws-notification-item.unread { border-left:4px solid #bf1835; background:#eef6f8; }
+.ws-notification-item.read { opacity:.76; }
+.ws-notification-icon { flex:none; display:grid; place-items:center; width:37px; height:37px; border-radius:10px; background:#dfedf2; color:#26617a; }
+.ws-notification-item>div { flex:1; min-width:0; }
+.ws-notification-title { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ws-notification-title strong { color:#17394e; font-size:16px; }
+.ws-notification-title span { color:#bf1835; font-size:11px; font-weight:800; }
+.ws-notification-item p { margin:7px 0; color:#3f6378; font-size:14px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ws-notification-item small { color:#668296; font-size:12px; }
+.ws-notification-panel .ws-student-history-pages { padding:0 22px 20px; }
+.ws-incident-page { display:grid; gap:18px; }
+.ws-incident-page .ws-form { padding:20px 24px; }
+.ws-incident-page .ws-form-error { margin:16px 22px; }
+.ws-incident-tools { display:flex; align-items:center; gap:9px; }
+.ws-incident-list { display:grid; gap:12px; padding:20px 22px; }
+.ws-incident-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,290px); gap:20px; padding:20px; border:1px solid #d6e4eb; border-left:4px solid #bf1835; border-radius:12px; background:#f8fcfd; }
+.ws-incident-card-main h4 { margin:8px 0; color:#17394e; font-size:18px; }
+.ws-incident-card-main p { margin:0 0 11px; color:#42677b; font-size:14px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ws-incident-card-main small { color:#71899a; }
+.ws-incident-card-side { display:grid; gap:10px; justify-items:start; align-content:start; }
+.ws-incident-card-side .ws-field,.ws-incident-card-side .ws-field select { width:100%; }
+.ws-incident-page .ws-student-history-pages { padding:0 22px 20px; }
+.ws-resource-heading,.ws-resource-row { display:flex; align-items:center; gap:12px; justify-content:space-between; }
+.ws-resource-heading { padding-bottom:13px; }
+.ws-resource-row { padding:12px 0; border-top:1px solid #d8e5eb; }
+.ws-resource-row>div { flex:1; min-width:0; }
+.ws-resource-row strong,.ws-resource-row small { display:block; }
+.ws-resource-row small { margin-top:4px; color:#6c8495; }
+.ws-resource-create { display:grid; grid-template-columns:minmax(180px,1fr) 130px auto; gap:12px; align-items:end; padding-top:18px; border-top:1px solid #d8e5eb; }
+@media(max-width:720px) { .ws-incident-card { grid-template-columns:1fr; } .ws-resource-create { grid-template-columns:1fr; } .ws-resource-row { flex-wrap:wrap; } }
+@media(max-width:600px) { .ws-notification-item { flex-wrap:wrap; } .ws-notification-item>.ws-button { margin-left:52px; } .ws-notification-list { padding:14px; } }
+.ws-absence-item-main>p { display:flex; align-items:center; gap:7px; margin:0; color:#486e84; font-size:14px; }
+.ws-absence-item-main>small { display:flex; align-items:center; gap:6px; color:#657f90; font-size:13px; }
+.ws-absence-reason { padding:11px 14px; border-radius:9px; background:#eaf3f6; }
+.ws-absence-reason span { color:#a92341; font-size:11px; font-weight:800; letter-spacing:.07em; }
+.ws-absence-reason p { margin:4px 0 0; color:#24485e; font-size:14px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.ws-absence-actions { display:flex; align-items:end; gap:9px; flex-wrap:wrap; max-width:420px; }
+.ws-absence-actions .ws-field { width:100%; }
+.ws-absence-actions .ws-button { justify-content:center; min-width:100px; }
+.ws-absence-empty { margin:0; padding:30px; color:#607f90; text-align:center; }
+.ws-absence-list .ws-pagination { padding:0 22px 20px; }
+@media(max-width:850px) { .ws-absence-form form,.ws-absence-item { grid-template-columns:1fr; } .ws-absence-actions { max-width:none; } }
+@media(max-width:600px) { .ws-absence-intro { align-items:flex-start; flex-wrap:wrap; padding:20px; } .ws-absence-intro .ws-button.secondary { width:100%; justify-content:center; } .ws-absence-form form { padding:18px; } .ws-absence-form-footer { flex-direction:column; align-items:stretch; } .ws-absence-items { padding:15px; } .ws-absence-item { padding:16px; } }

@@ -27,6 +27,14 @@ DO UPDATE SET
     location = EXCLUDED.location,
     status = EXCLUDED.status;
 
+-- Seed 30 seats only for rooms with no seat layout yet.
+INSERT INTO seats (room_id, seat_number, status)
+SELECT r.room_id, n.seat_number, 'AVAILABLE'
+FROM rooms r
+CROSS JOIN generate_series(1, 30) AS n(seat_number)
+WHERE r.room_code IN ('A101', 'A102', 'B201', 'B202', 'C301', 'C302')
+  AND NOT EXISTS (SELECT 1 FROM seats s WHERE s.room_id = r.room_id);
+
 -- Fixed equipment groups per room; seats are managed separately in seats.
 -- Re-running this block preserves existing inventory quantities/status.
 INSERT INTO resources(room_id,resource_name,resource_type,quantity,status)

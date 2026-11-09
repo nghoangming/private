@@ -29,19 +29,10 @@ public class StudentIntakeController {
         return service.list();
     }
 
-    public record Approval(String schoolEmail) { }
-
-    @PostMapping("/{id}/approve")
-    public StudentIntakeService.Intake approve(@PathVariable Long id,
-            @RequestAttribute("authenticatedUserId") Long adminId, @RequestBody Approval request) {
-        access.requireRole(adminId, "ADMIN");
-        return service.approve(id, request.schoolEmail(), adminId);
-    }
-
-    @PostMapping("/{id}/reject")
-    public StudentIntakeService.Intake reject(@PathVariable Long id,
+    @PostMapping("/{id}/retry")
+    public StudentIntakeService.Created retry(@PathVariable Long id,
             @RequestAttribute("authenticatedUserId") Long adminId) {
         access.requireRole(adminId, "ADMIN");
-        return service.reject(id);
+        return service.retry(id, adminId);
     }
 }

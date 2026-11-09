@@ -1,11 +1,11 @@
 import { demoAuth } from "@/lib/demo-auth";
 
-export type ApiRoom = { id: number; code: string; name: string; location: string; status: "ACTIVE" | "MAINTENANCE"; type: "THEORY" | "LAB" | "STUDY"; capacity: number };
+export type ApiRoom = { id: number; code: string; name: string; location: string; status: "ACTIVE" | "MAINTENANCE"; type: "THEORY" | "LAB" | "SELF_STUDY"; capacity: number };
 export type ApiRoomWrite = Omit<ApiRoom, "id">;
 export type ApiProfile = { id: number; code: string; name: string; email: string; faculty: string | null; roles: string[]; createdAt: string; verified: boolean; birthDate: string | null; phone: string | null; personalEmail: string | null; className: string | null; entryYear: number | null };
 export type ApiAdminUser = { id: number; code: string; name: string; email: string; faculty: string | null; role: "ADMIN" | "TEACHER" | "STUDENT"; verified: boolean };
-export type ApiStudentFormImport = { total: number; imported: number; failed: number; rows: { line: number; name: string; personalEmail: string; intakeId: number | null; error: string | null }[] };
-export type ApiStudentIntake = { id: number; name: string; phone: string | null; birthDate: string | null; gender: string | null; personalEmail: string; facultyCode: string; faculty: string; status: "PENDING" | "APPROVED" | "REJECTED"; userId: number | null; createdAt: string };
+export type ApiStudentFormImport = { total: number; imported: number; failed: number; rows: { line: number; name: string; personalEmail: string; intakeId: number | null; code: string | null; schoolEmail: string | null; error: string | null }[] };
+export type ApiStudentIntake = { id: number; name: string; phone: string | null; birthDate: string | null; gender: string | null; personalEmail: string; facultyCode: string; faculty: string; entryYear: number; status: "PENDING" | "APPROVED" | "REJECTED"; userId: number | null; createdAt: string };
 
 export async function availableRooms(date: string, startTime: string, endTime: string): Promise<ApiRoom[]> {
   const params = new URLSearchParams({ date, startTime, endTime });
@@ -39,6 +39,10 @@ export type ApiSeat = { id: number; roomId: number; seatNumber: number; status: 
 export type ApiSeatReservation = { id: number; classSessionId: number; seatId: number; userId: number; roomId: number; status: string };
 export type ApiQr = { classSessionId: number; token: string; expiresAt: string };
 export type ApiAttendance = { id: number | null; classSessionId: number; userId: number; seatId: number; seatNumber: number; status: "PRESENT" | "NOT_CHECKED_IN"; checkedInAt: string | null; studentName: string | null };
+export type ApiAbsenceRequest = { id: number; userId: number; classSessionId: number; type: "TEACHER" | "STUDENT"; reason: string; status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"; reviewedBy: number | null; createdAt: string; reviewedAt: string | null };
+export type ApiNotification = { id: number; title: string; message: string; type: string | null; bookingId: number | null; read: boolean; createdAt: string };
+export type ApiResource = { id: number; roomId: number; name: string; type: string; quantity: number; status: "AVAILABLE" | "IN_USE" | "BROKEN" | "MAINTENANCE" };
+export type ApiIncident = { id: number; roomId: number; roomCode: string; resourceId: number | null; reportedBy: number; reporterName: string; category: "PROJECTOR" | "AC" | "LIGHTING" | "SOUND" | "OTHER"; description: string; status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "REJECTED"; assignedTo: number | null; createdAt: string; resolvedAt: string | null };
 export type ApiRoomSchedule = { bookingId: number; startTime: string; endTime: string; status: ApiReservation["status"] };
 export const campusApi = {
   myProfile: () => api<ApiProfile>("/users/me"),
@@ -51,8 +55,7 @@ export const campusApi = {
   teacherProfile: (id: number) => api<ApiProfile>(`/users/${id}/public`),
   users: () => api<ApiAdminUser[]>("/users"),
   studentIntakes: () => api<ApiStudentIntake[]>("/intake/students"),
-  approveStudentIntake: (id: number, schoolEmail: string) => api<ApiStudentIntake>(`/intake/students/${id}/approve`, { method: "POST", body: JSON.stringify({ schoolEmail }) }),
-  rejectStudentIntake: (id: number) => api<ApiStudentIntake>(`/intake/students/${id}/reject`, { method: "POST" }),
+  retryStudentIntake: (id: number) => api<{ intake: ApiStudentIntake; code: string; schoolEmail: string }>(`/intake/students/${id}/retry`, { method: "POST" }),
   setStudentFaculty: (id: number, faculty: string) => api<ApiProfile>(`/users/${id}/faculty`, { method: "PATCH", body: JSON.stringify({ faculty }) }),
   inviteUser: (data: { code: string; name: string; email: string; role: "STUDENT" | "TEACHER"; faculty: string }) => api<{ id: number; email: string; role: string; faculty: string }>("/admin/invitations", { method: "POST", body: JSON.stringify(data) }),
   importStudentFormCsv: async (file: File): Promise<ApiStudentFormImport> => {
@@ -80,8 +83,19 @@ export const campusApi = {
   sessionsBetween: (from: string, to: string) => api<ApiClassSession[]>(`/class-sessions?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
   session: (id: number) => api<ApiClassSession>(`/class-sessions/${id}`),
   createSession: (bookingId: number, courseCode: string, title: string, makeup = false) => api<ApiClassSession>("/class-sessions", { method: "POST", body: JSON.stringify({ bookingId, courseCode, title, makeup }) }),
-  reportAbsence: (id: number) => api<ApiClassSession>(`/class-sessions/${id}/absence`, { method: "PATCH" }),
+  reportAbsence: (id: number, reason?: string) => api<ApiClassSession>(`/class-sessions/${id}/absence${reason ? `?reason=${encodeURIComponent(reason)}` : ""}`, { method: "PATCH" }),
   reviewAbsence: (id: number, decision: "approve" | "reject") => api<ApiClassSession>(`/class-sessions/${id}/absence/${decision}`, { method: "PATCH" }),
+  absenceRequests: () => api<ApiAbsenceRequest[]>("/absence-requests"),
+  requestStudentAbsence: (sessionId: number, reason: string) => api<ApiAbsenceRequest>(`/absence-requests/class-sessions/${sessionId}`, { method: "POST", body: JSON.stringify({ reason }) }),
+  reviewStudentAbsence: (id: number, approve: boolean, note: string) => api<ApiAbsenceRequest>(`/absence-requests/${id}`, { method: "PATCH", body: JSON.stringify({ approve, note: note.trim() || null }) }),
+  notifications: () => api<ApiNotification[]>("/notifications"),
+  markNotificationRead: (id: number) => api<ApiNotification>(`/notifications/${id}/read`, { method: "PATCH" }),
+  resources: () => api<ApiResource[]>("/resources"),
+  createResource: (roomId: number, body: { name: string; type: string; quantity: number; status: ApiResource["status"] }) => api<ApiResource>(`/resources/rooms/${roomId}`, { method: "POST", body: JSON.stringify(body) }),
+  updateResource: (id: number, body: { name: string; type: string; quantity: number; status: ApiResource["status"] }) => api<ApiResource>(`/resources/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  incidents: () => api<ApiIncident[]>("/incidents"),
+  reportIncident: (body: { roomId: number; resourceId: number | null; category: ApiIncident["category"]; description: string }) => api<ApiIncident>("/incidents", { method: "POST", body: JSON.stringify(body) }),
+  updateIncident: (id: number, body: { status: ApiIncident["status"]; assignedTo: number | null }) => api<ApiIncident>(`/incidents/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
   seats: (sessionId: number) => api<ApiSeat[]>(`/class-sessions/${sessionId}/seats`),
   mySeats: (_userId: number) => api<ApiSeatReservation[]>("/seat-reservations/mine"),
   seatReservation: (id: number) => api<ApiSeatReservation>(`/seat-reservations/${id}`),

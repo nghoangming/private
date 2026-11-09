@@ -3,28 +3,31 @@
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowRight, CalendarDays, CheckCircle2, CircleAlert, Clock3, DoorOpen, QrCode, Search, UsersRound, Wrench } from "lucide-react";
-import type { Incident, Reservation } from "@/lib/admin-data";
+import { ArrowRight, CalendarDays, CheckCircle2, CircleAlert, Clock3, DoorOpen, QrCode, Search, UsersRound } from "lucide-react";
+import type { Reservation } from "@/lib/admin-data";
 import type { RoomPurpose } from "@/lib/demo-campus";
 import { campusApi } from "@/lib/campus-api";
 import { QrScanner } from "@/components/qr-scanner";
 import { TeacherSchedule } from "@/components/teacher-schedule";
+import { AbsenceView } from "@/components/absence-views";
+import { IncidentView } from "@/components/incident-view";
 import { StudentOverview, StudentSchedule, StudentStudyBookings as StudentStudyBookingsPage, StudentSeats } from "@/components/student-views";
 import type { WorkspaceContext } from "@/lib/workspace-types";
-import { bookingName, incidentName, viDate, viTime } from "@/lib/workspace-types";
+import { bookingName, viDate, viTime } from "@/lib/workspace-types";
 
 const courseLabel = (code: string) => code === "DEMO" ? "Chưa có mã học phần" : code;
 function Empty({ text }: { text: string }) { return <div className="ws-empty"><Search size={25} /><h3>Chưa có thông tin</h3><p>{text}</p></div>; }
 export function LearningViews({ tab, context: c }: { tab: string; context: WorkspaceContext }) {
   const teacher = c.role === "TEACHER";
   const { data: choices = [], mutate: refreshChoice } = useSWR(`api-seats-${c.account.id}`, async () => (await campusApi.mySeats(c.account.id)).map(reservation => ({ id: reservation.id, sessionId: reservation.classSessionId, seatId: reservation.seatId })), { revalidateOnFocus: true });
+  if (tab === "absences") return <AbsenceView context={c} choices={choices} />;
   if (tab === "schedule" && !teacher) return <StudentSchedule context={c} choices={choices} />;
   if (tab === "schedule") return <TeacherSchedule context={c} />;
   if (tab === "seats" && !teacher) return <StudentSeats context={c} choices={choices} refreshChoice={refreshChoice} />;
   if (tab === "bookings" && teacher) return <TeacherBookings context={c} />;
   if (tab === "bookings" && !teacher) return <StudentStudyBookingsPage context={c} />;
   if (tab === "attendance" && teacher) return <Attendance context={c} />;
-  if (tab === "incidents" && teacher) return <Reports context={c} />;
+  if (tab === "incidents" && teacher) return <IncidentView context={c} />;
   if (tab === "checkin" && !teacher) return <Checkin context={c} choices={choices} />;
   if (!teacher) return <StudentOverview context={c} choices={choices} />;
   const dayKey = (value: string) => {
@@ -40,7 +43,7 @@ export function LearningViews({ tab, context: c }: { tab: string; context: Works
     { label: "Buổi dạy sắp tới", value: teacherSessions.length, sub: "Trong lịch giảng dạy", icon: CalendarDays, tab: "schedule" },
     { label: "Phòng được cấp", value: new Set(teacherSessions.map(x => x.roomId)).size, sub: "Theo các buổi giảng", icon: DoorOpen, tab: "schedule" },
     { label: "Yêu cầu chờ duyệt", value: pending, sub: "Yêu cầu của bạn", icon: Clock3, tab: "bookings" },
-    { label: "Thông báo", value: 0, sub: "Chưa có cập nhật mới", icon: CircleAlert, tab: "incidents" },
+    { label: "Thông báo", value: c.unreadNotifications, sub: "Thông báo chưa đọc", icon: CircleAlert, tab: "notifications" },
   ];
   return <><div className="ws-overview">{metrics.map(x => <button key={x.label} className="ws-metric" onClick={() => c.navigate(x.tab)}><span className="ws-metric-icon"><x.icon size={18} /></span><ArrowRight size={14} className="ws-metric-arrow" /><span className="ws-metric-label">{x.label}</span><strong>{String(x.value).padStart(2, "0")}</strong><small>{x.sub}</small></button>)}</div><div className="ws-columns"><div className="ws-panel"><div className="ws-panel-header"><div><h3>Lịch giảng dạy sắp tới</h3><p>Chuẩn bị cho những buổi học tiếp theo</p></div><button className="ws-row-action" onClick={() => c.navigate("schedule")}>Xem lịch <ArrowRight size={14} /></button></div><div className="ws-activity">{teacherSessions.slice(0, 3).map(x => <div className="ws-activity-row" key={x.id}><span className="ws-activity-icon"><CalendarDays size={16} /></span><div><strong>{x.subject}</strong><small>{courseLabel(x.className)} · {viDate(x.startTime)} · {viTime(x.startTime)}</small></div><span>{x.roomCode}</span></div>)}</div></div><div className="ws-highlight"><span>LỚP HỌC TIẾP THEO</span><h3>{upcoming?.subject ?? "Chưa có lịch mới"}</h3><p>{upcoming ? `${courseLabel(upcoming.className)} · Phòng ${upcoming.roomCode} · ${viDate(upcoming.startTime)}, ${viTime(upcoming.startTime)}` : "Lịch sẽ hiển thị tại đây khi có dữ liệu."}</p><button onClick={() => c.navigate("schedule")}>Xem lịch giảng <ArrowRight size={15} /></button></div></div></>;
 }
@@ -116,13 +119,6 @@ function Attendance({ context: c }: { context: WorkspaceContext }) {
       </>}
     </section>
   </>;
-}
-
-function Reports({ context: c }: { context: WorkspaceContext }) {
-  const [roomId, setRoomId] = useState(c.data.rooms[0]?.id ?? 0); const [category, setCategory] = useState<Incident["category"]>("OTHER"); const [description, setDescription] = useState(""); const [error, setError] = useState("");
-  const mine = c.data.incidents.filter(x => x.reporterName === c.account.name);
-  const submit = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); if (description.trim().length < 10) { setError("Mô tả ít nhất 10 ký tự để có thể xác định sự cố."); return; } const room = c.data.rooms.find(x => x.id === roomId); if (!room) { setError("Vui lòng chọn phòng hợp lệ."); return; } const next: Incident = { id: Math.max(...c.data.incidents.map(x => x.id), 0) + 1, roomId, roomCode: room.code, category, description: description.trim(), reporterName: c.account.name, priority: "MEDIUM", status: "OPEN", createdAt: new Date().toISOString() }; c.confirm("Gửi báo cáo sự cố?", `Phòng ${room.code} · ${description.trim()}. Báo cáo hiện chỉ được lưu trong phiên làm việc.`, () => { c.update("incidents", [next, ...c.data.incidents]); setDescription(""); setError(""); c.notice("Báo cáo hiện chỉ được lưu trong phiên làm việc."); }); };
-  return <div className="ws-columns"><div className="ws-panel"><div className="ws-panel-header"><div><h3>Báo cáo sự cố mới</h3><p>Giúp không gian học tập luôn sẵn sàng</p></div></div><div className="ws-detail" style={{ border: 0, margin: 0 }}><form className="ws-form" onSubmit={submit}><label className="ws-field">Phòng<select value={roomId} onChange={e => setRoomId(Number(e.target.value))}>{c.data.rooms.map(x => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select></label><label className="ws-field">Thiết bị / loại sự cố<select value={category} onChange={e => setCategory(e.target.value as Incident["category"])}><option value="PROJECTOR">Máy chiếu</option><option value="AC">Điều hòa</option><option value="LIGHTING">Chiếu sáng</option><option value="SOUND">Âm thanh</option><option value="OTHER">Khác</option></select></label><label className="ws-field span-two">Mô tả chi tiết<textarea required minLength={10} maxLength={500} value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả hiện tượng và vị trí thiết bị..." /></label>{error && <div className="ws-form-error" role="alert">{error}</div>}<div className="ws-form-actions"><button className="ws-button" type="submit">Gửi báo cáo <ArrowRight size={15} /></button></div></form></div></div><div className="ws-panel"><div className="ws-panel-header"><div><h3>Báo cáo của tôi</h3><p>Theo dõi tiến độ xử lý sự cố</p></div></div>{mine.length ? <div className="ws-activity">{mine.map(x => <div className="ws-activity-row" key={x.id}><span className="ws-activity-icon"><Wrench size={16} /></span><div><strong>#{x.id} · {x.roomCode}</strong><small>{x.description}</small></div><span className={`ws-tag ${x.status.toLowerCase()}`}>{incidentName[x.status]}</span></div>)}</div> : <Empty text="Bạn chưa gửi báo cáo nào." />}</div></div>;
 }
 
 function Checkin({ context: c, choices }: { context: WorkspaceContext; choices: { id: number; sessionId: number; seatId: number }[] }) {

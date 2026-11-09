@@ -15,6 +15,7 @@ export type WorkspaceContext = {
   role: Role;
   account: DemoAccount;
   data: WorkspaceData;
+  unreadNotifications: number;
   update: <K extends keyof WorkspaceData>(key: K, next: WorkspaceData[K]) => void;
   notice: (text: string) => void;
   confirm: (title: string, detail: string, action: () => void) => void;
@@ -24,4 +25,4 @@ export const viDate = (value: string) => new Intl.DateTimeFormat("vi-VN", { day:
 export const viTime = (value: string) => new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(value));
 export const roleName: Record<Role, string> = { ADMIN: "Quản trị", TEACHER: "Giảng viên", STUDENT: "Sinh viên" };
 export const bookingName: Record<Reservation["status"], string> = { PENDING: "Chờ duyệt", CONFIRMED: "Đã duyệt", REJECTED: "Từ chối", CANCELLED: "Đã hủy" };
-export const incidentName: Record<Incident["status"], string> = { OPEN: "Mới", IN_PROGRESS: "Đang xử lý", RESOLVED: "Đã xử lý" };
+export const incidentName: Record<Incident["status"], string> = { OPEN: "Mới", IN_PROGRESS: "Đang xử lý", RESOLVED: "Đã xử lý", REJECTED: "Từ chối" };
