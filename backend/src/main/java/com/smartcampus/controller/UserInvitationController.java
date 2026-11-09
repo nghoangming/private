@@ -4,24 +4,15 @@ import com.smartcampus.service.UserInvitationService;
 import com.smartcampus.service.UserInvitationService.ActivateRequest;
 import com.smartcampus.service.UserInvitationService.InviteRequest;
 import com.smartcampus.service.UserInvitationService.InviteResponse;
-import com.smartcampus.service.InvitationCsvService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
 public class UserInvitationController {
     private final UserInvitationService service;
-    private final InvitationCsvService csv;
-    public UserInvitationController(UserInvitationService service, InvitationCsvService csv) { this.service = service; this.csv = csv; }
-
-    @PostMapping(value = "/admin/invitations/import", consumes = "multipart/form-data")
-    public InvitationCsvService.ImportResult importCsv(@RequestPart("file") MultipartFile file,
-            @RequestAttribute("authenticatedUserId") Long adminId) {
-        return csv.importFile(file, adminId);
-    }
+    public UserInvitationController(UserInvitationService service) { this.service = service; }
 
     @PostMapping("/admin/invitations")
     @ResponseStatus(HttpStatus.CREATED)

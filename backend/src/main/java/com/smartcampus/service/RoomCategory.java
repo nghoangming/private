@@ -13,7 +13,7 @@ final class RoomCategory {
         }
         return switch (category) {
             case "CLASSROOM" -> "THEORY".equals(room.getType()) || "LAB".equals(room.getType());
-            case "STUDY" -> "STUDY".equals(room.getType());
+            case "STUDY" -> "SELF_STUDY".equals(room.getType());
             default -> false;
         };
     }

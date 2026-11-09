@@ -15,6 +15,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.OffsetDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,15 +27,17 @@ public class ClassSessionService {
     private final ClassSessionRepository classSessionRepository;
     private final RoomRepository roomRepository;
     private final SeatReservationRepository seatReservationRepository;
+    private final JdbcTemplate jdbc;
 
     public ClassSessionService(BookingRepository bookingRepository,
                                ClassSessionRepository classSessionRepository,
                                RoomRepository roomRepository,
-                               SeatReservationRepository seatReservationRepository) {
+                               SeatReservationRepository seatReservationRepository, JdbcTemplate jdbc) {
         this.bookingRepository = bookingRepository;
         this.classSessionRepository = classSessionRepository;
         this.roomRepository = roomRepository;
         this.seatReservationRepository = seatReservationRepository;
+        this.jdbc = jdbc;
     }
 
     @Transactional
@@ -70,7 +75,7 @@ public class ClassSessionService {
         return classSessionRepository.findAllByOrderByStartTimeAsc().stream()
                 .filter(session -> bookingRepository.findById(session.getBookingId())
                         .map(booking -> "PENDING".equals(booking.getStatus()) || "CONFIRMED".equals(booking.getStatus())
-                                || ("ABSENT".equals(session.getCalendarStatus()) && "CANCELLED".equals(booking.getStatus())))
+                                || ("ABSENT".equals(calendarStatus(session.getId())) && "CANCELLED".equals(booking.getStatus())))
                         .orElse(false))
                 .map(this::toResponse).toList();
     }
@@ -97,48 +102,47 @@ public class ClassSessionService {
     }
 
     @Transactional
-    public ClassSessionResponse reportAbsence(Long id) {
-        ClassSession session = classSessionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
-        Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
-        if (!"CONFIRMED".equals(booking.getStatus()))
-            throw new IllegalArgumentException("Only approved class sessions can be reported absent");
-        if (!session.getEndTime().isAfter(OffsetDateTime.now()))
-            throw new IllegalArgumentException("Buổi học đã kết thúc, không thể báo vắng.");
-        if ("ABSENT".equals(session.getCalendarStatus()) || "ABSENCE_PENDING".equals(session.getCalendarStatus()))
-            throw new IllegalArgumentException("Buổi học đã có yêu cầu báo vắng.");
-        session.requestAbsence();
-        return toResponse(classSessionRepository.saveAndFlush(session));
+    public ClassSessionResponse reportAbsence(Long id, Long teacherId) {
+        return reportAbsence(id, teacherId, "Giảng viên báo vắng buổi học");
     }
 
     @Transactional
-    public ClassSessionResponse decideAbsence(Long id, boolean approve) {
+    public ClassSessionResponse reportAbsence(Long id, Long teacherId, String reason) {
         ClassSession session = classSessionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
-        Booking booking = bookingRepository.findByIdForUpdate(session.getBookingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + session.getBookingId()));
-        if (!"ABSENCE_PENDING".equals(session.getCalendarStatus()))
-            throw new IllegalArgumentException("Buổi học không có yêu cầu báo vắng đang chờ duyệt.");
-        if (approve) {
-            if (!"CONFIRMED".equals(booking.getStatus()))
-                throw new IllegalArgumentException("Lịch phòng không còn được duyệt.");
-            session.approveAbsence();
-        } else {
-            session.rejectAbsence();
-        }
-        if (approve) {
-        seatReservationRepository.cancelActiveForSession(session.getId());
-        booking.cancel();
-        bookingRepository.saveAndFlush(booking);
-        }
-        return toResponse(classSessionRepository.saveAndFlush(session));
+        jdbc.queryForObject("SELECT absence_request_id FROM request_teacher_absence(?, ?, ?)", Long.class,
+                id, teacherId, reason);
+        return toResponse(session);
+    }
+
+    @Transactional
+    public ClassSessionResponse decideAbsence(Long id, Long adminId, boolean approve) {
+        ClassSession session = classSessionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Class session not found: " + id));
+        List<Long> requests = jdbc.query("SELECT absence_request_id FROM absence_requests WHERE class_session_id=? AND request_type='TEACHER' AND status='PENDING' ORDER BY created_at DESC LIMIT 1",
+                (rs, row) -> rs.getLong(1), id);
+        if (requests.isEmpty()) throw new ResponseStatusException(HttpStatus.CONFLICT, "Buổi học không có yêu cầu chờ duyệt.");
+        jdbc.queryForObject("SELECT absence_request_id FROM review_teacher_absence(?, ?, ?, NULL)", Long.class,
+                requests.getFirst(), adminId, approve);
+        return toResponse(session);
+    }
+
+    private String calendarStatus(Long sessionId) {
+        return jdbc.queryForObject("""
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1 FROM absence_requests ar
+                    WHERE ar.class_session_id=c.class_session_id
+                      AND ar.request_type='TEACHER' AND ar.status='PENDING'
+                ) THEN 'ABSENCE_PENDING' ELSE c.calendar_status END
+                FROM class_session_calendar c WHERE c.class_session_id=?
+                """,
+                String.class, sessionId);
     }
 
     private ClassSessionResponse toResponse(ClassSession session) {
         return new ClassSessionResponse(session.getId(), session.getBookingId(),
                 session.getCourseCode(), session.getTitle(), session.getRoomId(),
-                session.getStartTime(), session.getEndTime(), session.getCreatedAt(), session.getCalendarStatus(),
+                session.getStartTime(), session.getEndTime(), session.getCreatedAt(), calendarStatus(session.getId()),
                 bookingRepository.findById(session.getBookingId()).map(Booking::getUserId).orElse(null));
     }
 }

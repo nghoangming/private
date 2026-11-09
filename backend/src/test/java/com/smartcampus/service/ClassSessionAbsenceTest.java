@@ -1,7 +1,7 @@
 package com.smartcampus.service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,12 +12,12 @@ import com.smartcampus.repository.BookingRepository;
 import com.smartcampus.repository.ClassSessionRepository;
 import com.smartcampus.repository.RoomRepository;
 import com.smartcampus.repository.SeatReservationRepository;
-import java.time.OffsetDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class ClassSessionAbsenceTest {
@@ -25,54 +25,24 @@ class ClassSessionAbsenceTest {
     @Mock ClassSessionRepository sessions;
     @Mock RoomRepository rooms;
     @Mock SeatReservationRepository seats;
+    @Mock JdbcTemplate jdbc;
     @Mock ClassSession session;
     @Mock Booking booking;
 
-    private ClassSessionService service() { return new ClassSessionService(bookings, sessions, rooms, seats); }
-
     @Test
-    void rejectsAbsenceAfterClassEnds() {
+    void requestDelegatesToDatabaseWithoutReleasingRoomOrSeats() {
         when(sessions.findById(1L)).thenReturn(Optional.of(session));
-        when(session.getBookingId()).thenReturn(2L);
-        when(bookings.findByIdForUpdate(2L)).thenReturn(Optional.of(booking));
-        when(booking.getStatus()).thenReturn("CONFIRMED");
-        when(session.getEndTime()).thenReturn(OffsetDateTime.now().minusMinutes(1));
-
-        assertThrows(IllegalArgumentException.class, () -> service().reportAbsence(1L));
-        verify(session, never()).requestAbsence();
-    }
-
-    @Test
-    void requestDoesNotCancelBookingOrSeatsBeforeAdminApproval() {
-        when(sessions.findById(1L)).thenReturn(Optional.of(session));
-        when(session.getBookingId()).thenReturn(2L);
-        when(bookings.findByIdForUpdate(2L)).thenReturn(Optional.of(booking));
-        when(booking.getStatus()).thenReturn("CONFIRMED");
-        when(session.getEndTime()).thenReturn(OffsetDateTime.now().plusHours(1));
-        when(session.getCalendarStatus()).thenReturn("SCHEDULED");
-        when(sessions.saveAndFlush(session)).thenReturn(session);
-        when(bookings.findById(2L)).thenReturn(Optional.of(booking));
-
-        service().reportAbsence(1L);
-        verify(session).requestAbsence();
-        verify(booking, never()).cancel();
-        verify(seats, never()).cancelActiveForSession(any());
-    }
-
-    @Test
-    void approvalCancelsBookingAndReservedSeats() {
-        when(sessions.findById(1L)).thenReturn(Optional.of(session));
-        when(session.getBookingId()).thenReturn(2L);
         when(session.getId()).thenReturn(1L);
-        when(bookings.findByIdForUpdate(2L)).thenReturn(Optional.of(booking));
+        when(session.getBookingId()).thenReturn(2L);
         when(bookings.findById(2L)).thenReturn(Optional.of(booking));
-        when(booking.getStatus()).thenReturn("CONFIRMED");
-        when(session.getCalendarStatus()).thenReturn("ABSENCE_PENDING");
-        when(sessions.saveAndFlush(session)).thenReturn(session);
+        when(jdbc.queryForObject(eq("SELECT absence_request_id FROM request_teacher_absence(?, ?, ?)"),
+                eq(Long.class), eq(1L), eq(7L), anyString())).thenReturn(9L);
+        when(jdbc.queryForObject(eq("SELECT calendar_status FROM class_session_calendar WHERE class_session_id=?"),
+                eq(String.class), eq(1L))).thenReturn("SCHEDULED");
 
-        service().decideAbsence(1L, true);
-        verify(session).approveAbsence();
-        verify(seats).cancelActiveForSession(1L);
-        verify(booking).cancel();
+        new ClassSessionService(bookings,sessions,rooms,seats,jdbc).reportAbsence(1L,7L);
+
+        verify(booking,never()).cancel();
+        verify(seats,never()).cancelActiveForSession(1L);
     }
 }

@@ -85,9 +85,14 @@ public class RoomWriteService {
     }
 
     private void validate(RoomWriteRequest request) {
-        if (!List.of("THEORY", "LAB", "STUDY").contains(request.type())
+        String code = request.code() == null ? "" : request.code().trim().toUpperCase();
+        String derivedType = code.startsWith("A") ? "LAB"
+                : code.startsWith("B") ? "THEORY"
+                : code.startsWith("C") ? "SELF_STUDY" : "";
+        if (!List.of("THEORY", "LAB", "SELF_STUDY").contains(request.type())
+                || !derivedType.equals(request.type())
                 || !List.of("ACTIVE", "MAINTENANCE").contains(request.status())
-                || request.code().trim().length() > 20 || request.name().trim().length() > 100
+                || code.length() > 20 || request.name() == null || request.name().trim().length() > 100
                 || location(request).length() > 100)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thông tin phòng không hợp lệ.");
     }

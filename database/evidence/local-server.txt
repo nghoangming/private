@@ -1,0 +1,4 @@
+Isolated test cluster: C:\Users\ACER\AppData\Local\Temp\campus-rc-5a1be05445d847c9a5958ab4b634b746
+Port: 55439; listen: 127.0.0.1
+Demo DB names and retained backup: RESULT.txt
+Local test-only trust authentication. Server stopped after verification.

@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,8 +22,12 @@ public class UserProfileController {
 
     public UserProfileController(JdbcTemplate jdbc, AccessService access) { this.jdbc = jdbc; this.access = access; }
 
-    public record Profile(Long id, String code, String name, String email, String faculty, List<String> roles) { }
-    public record UpdateProfile(@NotBlank @Size(max = 100) String name) { }
+    public record Profile(Long id, String code, String name, String email, String faculty, List<String> roles,
+            OffsetDateTime createdAt, boolean verified, LocalDate birthDate, String phone,
+            String personalEmail, String className, Integer entryYear) { }
+    public record UpdateProfile(@NotBlank @Size(max = 100) String name, LocalDate birthDate,
+            @Size(max = 20) String phone, @Size(max = 100) String personalEmail,
+            @Size(max = 60) String className, Integer entryYear) { }
     public record ChangePassword(@NotBlank String currentPassword, @NotBlank @Size(min = 8) String newPassword) { }
     public record AdminUser(Long id, String code, String name, String email, String faculty, String role, boolean verified) { }
     public record UpdateFaculty(@NotBlank @Size(max = 100) String faculty) { }
@@ -56,9 +62,25 @@ public class UserProfileController {
     @PatchMapping("/me")
     public Profile update(@RequestAttribute("authenticatedUserId") Long userId,
                           @Valid @RequestBody UpdateProfile request) {
-        jdbc.update("UPDATE users SET full_name = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?", request.name().trim(), userId);
+        boolean student = access.hasRole(userId, "STUDENT");
+        boolean admin = access.hasRole(userId, "ADMIN");
+        if (request.entryYear() != null && (request.entryYear() < 1900 || request.entryYear() > 2100))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Năm vào trường không hợp lệ.");
+        if (request.phone() != null && !request.phone().isBlank() && !request.phone().trim().matches("[+0-9 .()-]{8,20}"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Số điện thoại không hợp lệ.");
+        if (request.personalEmail() != null && !request.personalEmail().isBlank()
+                && !request.personalEmail().trim().matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email cá nhân không hợp lệ.");
+        jdbc.update("""
+            UPDATE users SET full_name = ?, birth_date = ?, phone = ?, personal_email = ?,
+                class_name = ?, entry_year = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?
+            """, request.name().trim(), request.birthDate(), blankToNull(request.phone()),
+                blankToNull(request.personalEmail()), student ? blankToNull(request.className()) : null,
+                admin ? null : request.entryYear(), userId);
         return profile(userId);
     }
+
+    private String blankToNull(String value) { return value == null || value.isBlank() ? null : value.trim(); }
 
     @PostMapping("/me/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -80,9 +102,15 @@ public class UserProfileController {
     }
 
     private Profile profile(Long id) {
-        List<Profile> rows = jdbc.query("SELECT user_id, user_code, full_name, email, faculty FROM users WHERE user_id = ?",
+        List<Profile> rows = jdbc.query("""
+                SELECT user_id, user_code, full_name, email, faculty, created_at, email_verified,
+                       birth_date, phone, personal_email, class_name, entry_year
+                FROM users WHERE user_id = ?
+                """,
                 (rs, n) -> new Profile(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4),
-                        rs.getString(5), jdbc.query("SELECT r.role_name FROM user_roles ur JOIN roles r ON r.role_id = ur.role_id WHERE ur.user_id = ?", (r, i) -> r.getString(1), id)), id);
+                        rs.getString(5), jdbc.query("SELECT r.role_name FROM user_roles ur JOIN roles r ON r.role_id = ur.role_id WHERE ur.user_id = ?", (r, i) -> r.getString(1), id),
+                        rs.getObject(6, OffsetDateTime.class), rs.getBoolean(7), rs.getObject(8, LocalDate.class),
+                        rs.getString(9), rs.getString(10), rs.getString(11), rs.getObject(12, Integer.class)), id);
         if (rows.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản.");
         return rows.getFirst();
     }

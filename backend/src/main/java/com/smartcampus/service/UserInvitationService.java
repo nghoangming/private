@@ -51,7 +51,9 @@ public class UserInvitationService {
                 || request.email() == null || !request.email().contains("@") || request.email().length() > 100
                 || request.role() == null || !List.of("STUDENT", "TEACHER").contains(request.role())
                 || (request.faculty() != null && request.faculty().length() > 100)
-                || ("STUDENT".equals(request.role()) && (request.faculty() == null || request.faculty().isBlank())))
+                || (request.faculty() == null || request.faculty().isBlank())
+                || ("STUDENT".equals(request.role()) && !request.code().trim().matches("S[A-P][0-9]{7}"))
+                || ("TEACHER".equals(request.role()) && !request.code().trim().matches("T[A-P][0-9]{6}")))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thông tin tài khoản không hợp lệ.");
         byte[] bytes = new byte[32]; random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -60,7 +62,7 @@ public class UserInvitationService {
                 INSERT INTO users(user_code, full_name, email, password_hash, faculty, email_verified)
                 VALUES (?, ?, ?, ?, ?, FALSE) RETURNING user_id
                 """, Long.class, request.code().trim(), request.name().trim(), request.email().trim().toLowerCase(),
-                passwords.encode(token), "STUDENT".equals(request.role()) ? request.faculty().trim() : null);
+                passwords.encode(token), request.faculty().trim());
             jdbc.update("INSERT INTO user_roles(user_id, role_id) SELECT ?, role_id FROM roles WHERE role_name = ?", id, request.role());
             jdbc.update("INSERT INTO user_invites(user_id, token_hash, expires_at) VALUES (?, ?, ?)", id, hash(token), OffsetDateTime.now().plusHours(24));
             SimpleMailMessage message = new SimpleMailMessage();

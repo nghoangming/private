@@ -57,25 +57,26 @@ public class ClassSessionController {
 
     @PatchMapping("/{id}/absence")
     public ClassSessionResponse reportAbsence(@PathVariable Long id,
+                                              @RequestParam(required = false, defaultValue = "Giảng viên báo vắng buổi học") String reason,
                                               @RequestAttribute("authenticatedUserId") Long userId) {
         access.requireRole(userId, "TEACHER");
         ClassSessionResponse session = service.getById(id);
         access.requireOwnerOrAdmin(userId, reservations.getById(session.bookingId(), "CLASSROOM").userId());
-        return service.reportAbsence(id);
+        return service.reportAbsence(id, userId, reason);
     }
 
     @PatchMapping("/{id}/absence/approve")
     public ClassSessionResponse approveAbsence(@PathVariable Long id,
                                                 @RequestAttribute("authenticatedUserId") Long userId) {
         access.requireRole(userId, "ADMIN");
-        return service.decideAbsence(id, true);
+        return service.decideAbsence(id, userId, true);
     }
 
     @PatchMapping("/{id}/absence/reject")
     public ClassSessionResponse rejectAbsence(@PathVariable Long id,
                                                @RequestAttribute("authenticatedUserId") Long userId) {
         access.requireRole(userId, "ADMIN");
-        return service.decideAbsence(id, false);
+        return service.decideAbsence(id, userId, false);
     }
 
     @GetMapping

@@ -3,6 +3,8 @@ package com.smartcampus.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.DataAccessException;
+import java.sql.SQLException;
 import jakarta.persistence.PessimisticLockException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -15,6 +17,21 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDatabaseError(DataAccessException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause instanceof SQLException sql) {
+            String state = sql.getSQLState();
+            HttpStatus status = "42501".equals(state) ? HttpStatus.FORBIDDEN
+                    : "23505".equals(state) || "23P01".equals(state) ? HttpStatus.CONFLICT
+                    : "23514".equals(state) ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
+            String message = status == HttpStatus.INTERNAL_SERVER_ERROR ? "Database request failed" : sql.getMessage();
+            return ResponseEntity.status(status).body(new ErrorResponse(status.value(), message));
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(500, "Database request failed"));
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {

@@ -5,10 +5,14 @@ com\smartcampus\repository\SeatRepository.class
 com\smartcampus\entity\ClassSession.class
 com\smartcampus\exception\SeatConflictException.class
 com\smartcampus\repository\BookingRepository.class
+com\smartcampus\controller\AbsenceRequestController$Absence.class
+com\smartcampus\controller\AbsenceRequestController$Decision.class
+com\smartcampus\controller\NotificationController$Notification.class
 com\smartcampus\service\ClassSessionService.class
 com\smartcampus\dto\ClassSessionRequest.class
 com\smartcampus\service\RoomService.class
 com\smartcampus\controller\ClassroomReservationController.class
+com\smartcampus\controller\AbsenceRequestController$Reason.class
 com\smartcampus\dto\RoomResponse.class
 com\smartcampus\service\SeatReservationService.class
 com\smartcampus\service\ReservationService.class
@@ -24,8 +28,10 @@ com\smartcampus\dto\SeatResponse.class
 com\smartcampus\entity\Seat.class
 com\smartcampus\dto\ClassSessionResponse.class
 com\smartcampus\auth\AuthController$LoginResponse.class
+com\smartcampus\controller\NotificationController.class
 com\smartcampus\controller\StudyRoomReservationController.class
 com\smartcampus\entity\Room.class
+com\smartcampus\controller\AbsenceRequestController.class
 com\smartcampus\dto\SeatReservationRequest.class
 com\smartcampus\exception\GlobalExceptionHandler.class
 com\smartcampus\auth\AuthController$User.class

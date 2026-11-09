@@ -1,0 +1,8 @@
+BEGIN;
+ALTER TABLE users ADD COLUMN birth_date DATE;
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+ALTER TABLE users ADD COLUMN personal_email VARCHAR(100);
+ALTER TABLE users ADD COLUMN class_name VARCHAR(60);
+ALTER TABLE users ADD COLUMN entry_year SMALLINT;
+ALTER TABLE users ADD CONSTRAINT users_entry_year_range CHECK (entry_year IS NULL OR entry_year BETWEEN 1900 AND 2100);
+COMMIT;

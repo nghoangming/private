@@ -1,0 +1,9 @@
+PASS: migrations 001-016, constraint/fixed-room-resource/check-in/seat-hold tests, concurrent seat-hold race, limited RLS test, integrity, backup/restore.
+UTC: 2026-11-08T11:18:48.6591242Z
+Server: 127.0.0.1:55439
+Source: campus_rc_a0ea9fc494aa
+Restored: campus_restore_a0ea9fc494aa
+Backup: C:\Users\ACER\AppData\Local\Temp\campus-release-backups\campus_rc_a0ea9fc494aa.dump
+SHA256: 0FD5FDF4EEB8EDED19803A5377FF357D8DCC734B9116E60D99B5354921D80655
+PASS: every public table row count/digest and sequence state matches restored DB.
+Scope: isolated seeded DB; not evidence for existing CNPM data or API authentication.

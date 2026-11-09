@@ -2,9 +2,10 @@ import { demoAuth } from "@/lib/demo-auth";
 
 export type ApiRoom = { id: number; code: string; name: string; location: string; status: "ACTIVE" | "MAINTENANCE"; type: "THEORY" | "LAB" | "STUDY"; capacity: number };
 export type ApiRoomWrite = Omit<ApiRoom, "id">;
-export type ApiProfile = { id: number; code: string; name: string; email: string; faculty: string | null; roles: string[] };
+export type ApiProfile = { id: number; code: string; name: string; email: string; faculty: string | null; roles: string[]; createdAt: string; verified: boolean; birthDate: string | null; phone: string | null; personalEmail: string | null; className: string | null; entryYear: number | null };
 export type ApiAdminUser = { id: number; code: string; name: string; email: string; faculty: string | null; role: "ADMIN" | "TEACHER" | "STUDENT"; verified: boolean };
-export type ApiCsvImport = { total: number; created: number; failed: number; rows: { line: number; code: string; email: string; id: number | null; error: string | null }[] };
+export type ApiStudentFormImport = { total: number; imported: number; failed: number; rows: { line: number; name: string; personalEmail: string; intakeId: number | null; error: string | null }[] };
+export type ApiStudentIntake = { id: number; name: string; phone: string | null; birthDate: string | null; gender: string | null; personalEmail: string; facultyCode: string; faculty: string; status: "PENDING" | "APPROVED" | "REJECTED"; userId: number | null; createdAt: string };
 
 export async function availableRooms(date: string, startTime: string, endTime: string): Promise<ApiRoom[]> {
   const params = new URLSearchParams({ date, startTime, endTime });
@@ -41,7 +42,7 @@ export type ApiAttendance = { id: number | null; classSessionId: number; userId:
 export type ApiRoomSchedule = { bookingId: number; startTime: string; endTime: string; status: ApiReservation["status"] };
 export const campusApi = {
   myProfile: () => api<ApiProfile>("/users/me"),
-  updateProfile: (name: string) => api<ApiProfile>("/users/me", { method: "PATCH", body: JSON.stringify({ name }) }),
+  updateProfile: (data: Pick<ApiProfile, "name" | "birthDate" | "phone" | "personalEmail" | "className" | "entryYear">) => api<ApiProfile>("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
   changePassword: async (currentPassword: string, newPassword: string) => {
     const token = demoAuth.token();
     const response = await fetch("/api/v1/users/me/password", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ currentPassword, newPassword }) });
@@ -49,18 +50,21 @@ export const campusApi = {
   },
   teacherProfile: (id: number) => api<ApiProfile>(`/users/${id}/public`),
   users: () => api<ApiAdminUser[]>("/users"),
+  studentIntakes: () => api<ApiStudentIntake[]>("/intake/students"),
+  approveStudentIntake: (id: number, schoolEmail: string) => api<ApiStudentIntake>(`/intake/students/${id}/approve`, { method: "POST", body: JSON.stringify({ schoolEmail }) }),
+  rejectStudentIntake: (id: number) => api<ApiStudentIntake>(`/intake/students/${id}/reject`, { method: "POST" }),
   setStudentFaculty: (id: number, faculty: string) => api<ApiProfile>(`/users/${id}/faculty`, { method: "PATCH", body: JSON.stringify({ faculty }) }),
   inviteUser: (data: { code: string; name: string; email: string; role: "STUDENT" | "TEACHER"; faculty: string }) => api<{ id: number; email: string; role: string; faculty: string }>("/admin/invitations", { method: "POST", body: JSON.stringify(data) }),
-  importUsers: async (file: File): Promise<ApiCsvImport> => {
+  importStudentFormCsv: async (file: File): Promise<ApiStudentFormImport> => {
     const token = demoAuth.token();
     if (!token) throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     const body = new FormData(); body.append("file", file);
-    const response = await fetch("/api/v1/admin/invitations/import", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body });
+    const response = await fetch("/api/v1/intake/students/import", { method: "POST", headers: { Authorization: `Bearer ${token}` }, body });
     if (!response.ok) {
       const payload = await response.json().catch(() => null) as { message?: string; detail?: string } | null;
       throw new Error(payload?.message ?? payload?.detail ?? `Không thể nhập CSV (HTTP ${response.status}).`);
     }
-    return response.json() as Promise<ApiCsvImport>;
+    return response.json() as Promise<ApiStudentFormImport>;
   },
   rooms: () => api<ApiRoom[]>("/rooms"),
   room: (id: number) => api<ApiRoom>(`/rooms/${id}`),
