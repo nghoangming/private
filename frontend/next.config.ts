@@ -1,16 +1,31 @@
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["172.20.10.3"],
   async rewrites() {
-    return [{ source: "/api/v1/:path*", destination: `${process.env.BACKEND_URL ?? "http://localhost:8080"}/api/v1/:path*` }];
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${process.env.BACKEND_URL ?? "http://localhost:8080"}/api/v1/:path*`,
+      },
+    ];
   },
   async headers() {
-    return [{ source: "/:path*", headers: [
-      { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-      { key: "Strict-Transport-Security", value: "max-age=63072000" },
-      { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
-      { key: "X-Frame-Options", value: "SAMEORIGIN" },
-    ] }];
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=()",
+          },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+    ];
   },
 };
 export default nextConfig;
+module.exports = nextConfig;

@@ -564,6 +564,47 @@
 .ws-intake-head h3 { margin:5px 0; font-size:20px; color:#17384c; }
 .ws-intake-head p { margin:0; color:#668294; font-size:13px; }
 .ws-intake-empty { margin:18px 0 0; padding:18px; border-radius:10px; background:#edf5f8; color:#658193; }
+.ws-admin-editor{width:min(100%,790px);padding:20px;background:linear-gradient(145deg,#fff,#f5fafc)}
+.ws-admin-editor .ws-detail-head{padding:2px 4px 14px;border-bottom:1px solid #d9e6ec}
+.ws-admin-editor .ws-form{padding:18px 5px 3px;gap:13px 18px}
+.ws-admin-editor .ws-field{gap:6px;font-size:13px}
+.ws-admin-editor .ws-field input,.ws-admin-editor .ws-field select{min-height:43px;border-color:#cbdde7;border-radius:9px;padding:9px 12px}
+.ws-admin-editor .ws-form-note{padding:10px 12px;border-radius:8px;background:#eaf3f7;color:#607b8c}
+.ws-admin-editor .ws-form-actions{padding-top:2px}
+.ws-booking-review{scroll-margin-top:22px;padding:22px;background:linear-gradient(145deg,#fff,#f7fbfc);border-color:#c9dce5}
+.ws-booking-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:17px 0}
+.ws-booking-facts>div{min-width:0;padding:13px 15px;border:1px solid #d3e2e9;border-radius:9px;background:#edf5f8}
+.ws-booking-facts small{display:block;margin-bottom:6px;color:#69869a;font-size:10px;font-weight:800;letter-spacing:.8px}
+.ws-booking-facts strong{display:block;overflow-wrap:anywhere;color:#173950;font-size:14px}
+.ws-booking-review>p{margin:8px 0;color:#61798a}
+.ws-booking-review .ws-review-conflict{padding:10px 12px;border-radius:8px;background:#fff0f1;color:#a92d45}
+.ws-booking-review .ws-review-ok{padding:10px 12px;border-radius:8px;background:#edf8f1;color:#327853}
+.ws-booking-review .ws-inline-actions{margin-top:14px}
+.ws-invite-dialog{padding:22px 26px}
+.ws-invite-dialog .ws-detail-head{margin-bottom:15px}
+.ws-invite-dialog .ws-detail-head h3{margin:0 0 4px;font-size:21px}
+.ws-invite-dialog .ws-detail-head p{margin:0;font-size:13px}
+.ws-invite-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(230px,.85fr);gap:20px;align-items:stretch}
+.ws-invite-layout>.ws-form{gap:12px 15px;align-content:start}
+.ws-invite-layout .ws-form>.ws-field{gap:5px}
+.ws-invite-layout .ws-form>.ws-field input,.ws-invite-layout .ws-form>.ws-field select{min-height:41px;padding:8px 11px}
+.ws-invite-layout .ws-form>.ws-button{grid-column:1/-1;justify-self:end;min-height:42px;margin-top:2px}
+.ws-invite-guide{padding:17px 18px;border:1px solid #cbdfe7;border-radius:11px;background:linear-gradient(155deg,#edf6f8,#f7fafb)}
+.ws-invite-guide h4{margin:7px 0 12px;color:#193c52;font-size:16px}
+.ws-invite-guide ol{display:grid;gap:11px;margin:0;padding-left:19px;color:#b92343}
+.ws-invite-guide li{padding-left:2px}
+.ws-invite-guide li strong,.ws-invite-guide li span{display:block;color:#24465a;font-size:12px}
+.ws-invite-guide li span{margin-top:3px;color:#6b8291;line-height:1.45}
+.ws-invite-guide>p{margin:13px 0 0;padding-top:11px;border-top:1px solid #d2e2e8;color:#6b8291;font-size:11px;line-height:1.5}
+.ws-import-dialog:not(.ws-invite-dialog){padding:21px 25px 23px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-detail-head{margin-bottom:12px;padding-bottom:13px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-detail-head h3{font-size:21px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-detail-head p{font-size:13px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-form{gap:13px 18px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-form>p{margin:0;font-size:13px;line-height:1.5}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-form>.ws-field:has(input[type=file]){padding:12px;border-radius:10px}
+.ws-import-dialog:not(.ws-invite-dialog) .ws-form>.ws-button{min-height:42px}
+@media(max-width:700px){.ws-admin-editor{padding:16px}.ws-admin-editor .ws-form{padding:14px 0 0}.ws-booking-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-invite-layout{grid-template-columns:1fr;gap:14px}.ws-invite-layout>.ws-form{grid-template-columns:1fr}.ws-invite-layout .ws-form>.ws-field,.ws-invite-layout .ws-form>.ws-button{grid-column:1}.ws-invite-layout .ws-form>.ws-button{justify-self:stretch}.ws-invite-dialog{padding:17px}}
 .ws-intake-list { display:grid; gap:12px; margin-top:18px; }
 .ws-intake-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,1.2fr); gap:18px; align-items:center; padding:18px; border:1px solid #d3e1e8; border-radius:12px; background:#fff; }
 .ws-intake-card>div:first-child { display:grid; gap:6px; }
